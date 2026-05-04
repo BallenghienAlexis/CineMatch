@@ -109,7 +109,8 @@ export default function ExploreScreen() {
             user.id,
             movie.id,
             movie.title,
-            movie.vote_average
+            movie.vote_average,
+            movie.poster_path
           );
         }
       } catch (err) {

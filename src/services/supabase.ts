@@ -61,6 +61,7 @@ export type LikedMovie = {
   movie_id: number;
   movie_title: string;
   movie_rating: number;
+  poster_path?: string;
   created_at: string;
 };
 

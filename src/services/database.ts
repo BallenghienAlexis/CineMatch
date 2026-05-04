@@ -20,7 +20,8 @@ export const databaseService = {
     userId: string,
     movieId: number,
     movieTitle: string,
-    movieRating: number
+    movieRating: number,
+    posterPath?: string
   ) => {
     try {
       const { data, error } = await supabase
@@ -30,6 +31,7 @@ export const databaseService = {
           movie_id: movieId,
           movie_title: movieTitle,
           movie_rating: movieRating,
+          poster_path: posterPath || null,
         })
         .select()
         .single();

@@ -127,16 +127,13 @@ function MovieItemCard({ movie }: { movie: LikedMovie }) {
         movie={{
           id: movie.movie_id,
           title: movie.movie_title,
-          poster_path: `/w342/film-placeholder.jpg`, // TMDB placeholder
+          poster_path: movie.poster_path || '/w342/film-placeholder.jpg',
           release_date: '',
           vote_average: movie.movie_rating || 0,
           overview: '',
         }}
         showOverlay={true}
       />
-      <ThemedText style={styles.rating}>
-        ⭐ {movie.movie_rating?.toFixed(1)}
-      </ThemedText>
     </View>
   );
 }
@@ -176,12 +173,6 @@ const styles = StyleSheet.create({
     width: '48%',
     aspectRatio: 2 / 3,
     marginBottom: 8,
-  },
-  rating: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
   },
 });
 
