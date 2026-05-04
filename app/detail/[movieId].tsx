@@ -113,6 +113,11 @@ export default function DetailScreen() {
       } else {
         setUserStatus('rejected');
       }
+
+      // Revenir à l'écran précédent après 800ms pour voir la confirmation
+      setTimeout(() => {
+        router.back();
+      }, 800);
     } catch (err) {
       console.error('Error updating status:', err);
     } finally {

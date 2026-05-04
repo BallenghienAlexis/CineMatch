@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -166,6 +166,43 @@ export default function ExploreScreen() {
       loadMovies(page);
     }
   }, [page, loadMovies]);
+
+  // Vérifier si le film actuel a été swipé au retour du détail
+  useFocusEffect(
+    useCallback(() => {
+      const checkAndSkipIfSwiped = async () => {
+        if (!user?.id || movies.length === 0) return;
+
+        try {
+          const currentMovie = moviesRef.current[currentIndexRef.current];
+          if (!currentMovie) return;
+
+          // Récupérer l'historique des swipes
+          const { data } = await databaseService.getSwipeHistory(user.id);
+          if (!data) return;
+
+          // Vérifier si le film actuel a été swipé
+          const isMovieSwiped = data.some((s) => s.movie_id === currentMovie.id);
+
+          if (isMovieSwiped) {
+            // Passer au film suivant
+            const nextIndex = currentIndexRef.current + 1;
+            setCurrentIndex(nextIndex);
+
+            // Vérifier si on doit charger plus de films
+            const remainingMovies = moviesRef.current.length - nextIndex;
+            if (remainingMovies <= LOAD_MORE_BUFFER) {
+              setPage((prev) => prev + 1);
+            }
+          }
+        } catch (err) {
+          console.error('Error checking if movie was swiped:', err);
+        }
+      };
+
+      checkAndSkipIfSwiped();
+    }, [user?.id, movies])
+  );
 
   // Calculer l'angle de rotation en fonction du swipe (en degrés)
   const rotationValue = pan.x.interpolate({
