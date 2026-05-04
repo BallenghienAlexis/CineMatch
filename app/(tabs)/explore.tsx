@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   PanResponder,
-  View,
   StyleSheet,
   ActivityIndicator,
   PanResponderInstance,
@@ -55,8 +54,6 @@ export default function ExploreScreen() {
     try {
       if (pageNum === 1) {
         setLoading(true);
-      } else {
-        setIsLoadingMore(true);
       }
       setError(null);
       const result = await tmdbService.getPopularMovies(pageNum);
@@ -66,26 +63,77 @@ export default function ExploreScreen() {
     } finally {
       if (pageNum === 1) {
         setLoading(false);
-      } else {
-        setIsLoadingMore(false);
       }
     }
   }, []);
 
-  // Charger les films au montage (une seule fois, même après hot reload)
+  // Restaurer la progression de l'utilisateur au montage
   useEffect(() => {
-    if (!hasLoadedRef.current && movies.length === 0) {
+    if (!hasLoadedRef.current && movies.length === 0 && user?.id) {
+      hasLoadedRef.current = true;
+
+      const restoreProgress = async () => {
+        try {
+          // Récupérer l'historique des swipes
+          const { data: swipeHistory, error: historyError } = await databaseService.getSwipeHistory(user.id);
+
+          if (historyError) {
+            console.error('Erreur lors du chargement de l\'historique:', historyError);
+            loadMovies(1);
+            return;
+          }
+
+          const swipeCount = swipeHistory?.length || 0;
+          console.log(`📊 Historique: ${swipeCount} swipes détectés`);
+
+          // Calculer la page et l'index
+          const moviesPerPage = 20;
+          const targetPage = Math.floor(swipeCount / moviesPerPage) + 1;
+          const targetIndex = swipeCount;
+
+          console.log(`🔄 Restauration: page ${targetPage}, index ${targetIndex}`);
+
+          // Charger toutes les pages jusqu'à la cible
+          let allMovies: Movie[] = [];
+          for (let p = 1; p <= targetPage; p++) {
+            try {
+              const result = await tmdbService.getPopularMovies(p);
+              allMovies = [...allMovies, ...result.results];
+            } catch (err) {
+              console.error(`Erreur lors du chargement page ${p}:`, err);
+              break;
+            }
+          }
+
+          setMovies(allMovies);
+          setPage(targetPage);
+
+          // Restaurer l'index, mais s'assurer qu'il ne dépasse pas la limite
+          const safeIndex = Math.min(targetIndex, allMovies.length - 1);
+          setCurrentIndex(safeIndex);
+
+          console.log(`✅ Progression restaurée: ${safeIndex}/${allMovies.length} films`);
+          setLoading(false);
+        } catch (err: any) {
+          console.error('Erreur lors de la restauration de la progression:', err);
+          loadMovies(1);
+        }
+      };
+
+      restoreProgress();
+    } else if (!hasLoadedRef.current && movies.length === 0) {
+      // Si pas d'utilisateur connecté, charger normalement
       hasLoadedRef.current = true;
       loadMovies(1);
     }
-  }, []);
+  }, [user?.id, loadMovies]);
 
   // Charger plus de films quand la page change
   useEffect(() => {
     if (page > 1) {
       loadMovies(page);
     }
-  }, [page]);
+  }, [page, loadMovies]);
 
   // Calculer l'angle de rotation en fonction du swipe (en degrés)
   const rotationValue = pan.x.interpolate({
@@ -114,7 +162,7 @@ export default function ExploreScreen() {
             movie.id,
             movie.title,
             movie.vote_average,
-            movie.poster_path
+            movie.poster_path ?? undefined
           );
         }
       } catch (err) {
@@ -148,12 +196,11 @@ export default function ExploreScreen() {
   useEffect(() => {
     panResponderRef.current = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (evt, { dx, dy }) => {
+      onMoveShouldSetPanResponder: (evt, { dx }) => {
         return Math.abs(dx) > 5;
       },
-      onPanResponderMove: (evt, { dx, dy }) => {
+      onPanResponderMove: (evt, { dx }) => {
         pan.x.setValue(dx);
-        pan.y.setValue(dy);
       },
       onPanResponderRelease: (evt, gestureState) => {
         const { dx, vx } = gestureState;
