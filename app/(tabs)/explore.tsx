@@ -7,6 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   View,
+  ScrollView,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -22,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { MovieCard } from '@/src/components/MovieCard';
-import { tmdbService, Movie } from '@/src/services/tmdb';
+import { tmdbService, Movie, Genre } from '@/src/services/tmdb';
 import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useThemeToggle } from '@/src/contexts/ThemeContext';
@@ -41,6 +42,9 @@ export default function ExploreScreen() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
+  const [genresLoading, setGenresLoading] = useState(true);
 
   const panResponderRef = useRef<PanResponderInstance | null>(null);
   const panX = useSharedValue(0);
@@ -91,13 +95,33 @@ export default function ExploreScreen() {
     pageRef.current = page;
   }, [page]);
 
+  // Charger les genres au montage
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        setGenresLoading(true);
+        const genreList = await tmdbService.getGenres();
+        setGenres(genreList);
+      } catch (err) {
+        console.error('Error loading genres:', err);
+      } finally {
+        setGenresLoading(false);
+      }
+    };
+    loadGenres();
+  }, []);
+
   const loadMovies = useCallback(async (pageNum: number) => {
     try {
       if (pageNum === 1) {
         setLoading(true);
       }
       setError(null);
-      const result = await tmdbService.getPopularMovies(pageNum);
+
+      const result = selectedGenreId
+        ? await tmdbService.getMoviesByGenre(selectedGenreId, pageNum)
+        : await tmdbService.getPopularMovies(pageNum);
+
       setMovies((prev) => [...prev, ...result.results]);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des films');
@@ -106,7 +130,7 @@ export default function ExploreScreen() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [selectedGenreId]);
 
   // Restaurer la progression de l'utilisateur au montage
   useEffect(() => {
@@ -175,6 +199,15 @@ export default function ExploreScreen() {
       loadMovies(page);
     }
   }, [page, loadMovies]);
+
+  // Recharger les films quand le genre sélectionné change
+  useEffect(() => {
+    setMovies([]);
+    setCurrentIndex(0);
+    setPage(1);
+    hasLoadedRef.current = false;
+    loadMovies(1);
+  }, [selectedGenreId, loadMovies]);
 
   // Vérifier si le film actuel a été swipé au retour du détail
   useFocusEffect(
@@ -447,6 +480,68 @@ export default function ExploreScreen() {
       >
         <MovieCard movie={currentMovie} showOverlay={true} />
       </Animated.View>
+
+      {/* Genres Filter */}
+      {!genresLoading && genres.length > 0 && (
+        <View style={styles.genresSection}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.genresScrollContainer}
+          >
+            <TouchableOpacity
+              style={[
+                styles.genreChip,
+                selectedGenreId === null && styles.genreChipActive,
+                {
+                  backgroundColor: selectedGenreId === null
+                    ? (colorScheme === 'dark' ? '#0a7ea4' : '#0a7ea4')
+                    : (colorScheme === 'dark' ? '#333' : '#f0f0f0'),
+                },
+              ]}
+              onPress={() => setSelectedGenreId(null)}
+            >
+              <ThemedText
+                style={[
+                  styles.genreChipText,
+                  {
+                    color: selectedGenreId === null ? '#fff' : (colorScheme === 'dark' ? '#ccc' : '#666'),
+                  },
+                ]}
+              >
+                Tous
+              </ThemedText>
+            </TouchableOpacity>
+
+            {genres.map((genre) => (
+              <TouchableOpacity
+                key={genre.id}
+                style={[
+                  styles.genreChip,
+                  selectedGenreId === genre.id && styles.genreChipActive,
+                  {
+                    backgroundColor: selectedGenreId === genre.id
+                      ? (colorScheme === 'dark' ? '#0a7ea4' : '#0a7ea4')
+                      : (colorScheme === 'dark' ? '#333' : '#f0f0f0'),
+                  },
+                ]}
+                onPress={() => setSelectedGenreId(genre.id)}
+              >
+                <ThemedText
+                  style={[
+                    styles.genreChipText,
+                    {
+                      color: selectedGenreId === genre.id ? '#fff' : (colorScheme === 'dark' ? '#ccc' : '#666'),
+                    },
+                  ]}
+                >
+                  {genre.name}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -532,6 +627,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  genresSection: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    height: 50,
+    justifyContent: 'center',
+  },
+  genresScrollContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  genreChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  genreChipActive: {
+    backgroundColor: '#0a7ea4',
+  },
+  genreChipText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 

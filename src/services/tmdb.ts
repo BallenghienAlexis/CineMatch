@@ -37,6 +37,15 @@ export type SearchResult = {
   total_results: number;
 };
 
+export type Genre = {
+  id: number;
+  name: string;
+};
+
+export type GenresResult = {
+  genres: Genre[];
+};
+
 const TMDB_API_KEY = process.env.EXPO_PUBLIC_TMDB_API_KEY || '';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -74,6 +83,71 @@ export const tmdbService = {
       return data;
     } catch (error) {
       console.error('Error fetching popular movies:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Récupérer tous les genres de films
+   */
+  getGenres: async (): Promise<Genre[]> => {
+    const cacheKey = 'genres';
+    const cached = movieCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}&language=fr-FR`
+      );
+
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+
+      const data: GenresResult = await response.json();
+      const genres = data.genres;
+
+      // Cache le résultat
+      movieCache.set(cacheKey, { data: genres, timestamp: Date.now() });
+
+      return genres;
+    } catch (error) {
+      console.error('Error fetching genres:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Récupérer les films populaires d'un genre spécifique
+   */
+  getMoviesByGenre: async (genreId: number, page: number = 1): Promise<SearchResult> => {
+    const cacheKey = `genre_${genreId}_${page}`;
+    const cached = movieCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}&page=${page}&language=fr-FR&sort_by=popularity.desc`
+      );
+
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+
+      const data: SearchResult = await response.json();
+
+      // Cache le résultat
+      movieCache.set(cacheKey, { data, timestamp: Date.now() });
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching movies by genre:', error);
       throw error;
     }
   },
