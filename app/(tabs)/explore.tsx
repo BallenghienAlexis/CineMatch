@@ -40,6 +40,7 @@ export default function ExploreScreen() {
   const currentIndexRef = useRef(0);
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
+  const isAnimatingRef = useRef(false); // Track if animation is in progress
   const { user, signOut } = useAuth();
   const router = useRouter();
   const colorScheme = useEffectiveColorScheme();
@@ -55,10 +56,15 @@ export default function ExploreScreen() {
   };
 
   const handleMoviePress = () => {
-    if (movies[currentIndex]) {
+    // Ne pas naviguer pendant une animation de swipe
+    if (isAnimatingRef.current) return;
+    
+    // Utiliser les refs (mises à jour synchronously) au lieu du state (asynchrone)
+    const currentMovie = moviesRef.current[currentIndexRef.current];
+    if (currentMovie) {
       router.push({
         pathname: '/detail/[movieId]',
-        params: { movieId: movies[currentIndex].id.toString() },
+        params: { movieId: currentMovie.id.toString() },
       });
     }
   };
@@ -171,6 +177,9 @@ export default function ExploreScreen() {
     const movie = moviesRef.current[currentIndexRef.current];
     if (!movie) return;
 
+    // Marquer que l'animation est en cours
+    isAnimatingRef.current = true;
+
     if (user?.id) {
       try {
         // Enregistrer dans swipe_history
@@ -212,11 +221,16 @@ export default function ExploreScreen() {
       const remainingMovies = moviesRef.current.length - nextIndex;
       console.log(`🎬 Films restants: ${remainingMovies}, prochain index: ${nextIndex}`);
 
-      if (remainingMovies <= LOAD_MORE_BUFFER) {
-        console.log(`⬇️ Chargement de la page ${pageRef.current + 1}...`);
-        setPage((prev) => prev + 1);
-      }
-    });
+       if (remainingMovies <= LOAD_MORE_BUFFER) {
+         console.log(`⬇️ Chargement de la page ${pageRef.current + 1}...`);
+         setPage((prev) => prev + 1);
+       }
+
+       // Marquer que l'animation est terminée avec un petit délai pour permettre aux states de se mettre à jour
+       setTimeout(() => {
+         isAnimatingRef.current = false;
+       }, 50);
+     });
   }, [user?.id, pan]);
 
    useEffect(() => {
