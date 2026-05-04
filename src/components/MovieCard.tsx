@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   poster: {
-    flex: 0.85,
+    flex: 0.75,
     width: '100%',
     backgroundColor: '#ccc',
   },
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   infoSection: {
-    flex: 0.15,
+    flex: 0.25,
     padding: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'flex-start',

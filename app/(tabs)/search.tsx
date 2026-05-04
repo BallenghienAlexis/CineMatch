@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
@@ -56,6 +56,15 @@ export default function SearchScreen() {
       }
     };
   }, [searchQuery]);
+
+  // Rafraîchir les résultats quand on revient du détail
+  useFocusEffect(
+    useCallback(() => {
+      if (searchQuery.trim() && results.length > 0) {
+        performSearch(searchQuery, 1);
+      }
+    }, [searchQuery, results.length])
+  );
 
   const performSearch = async (query: string, pageNum: number) => {
     try {

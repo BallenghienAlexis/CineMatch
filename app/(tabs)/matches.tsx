@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,7 +7,7 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -27,11 +27,7 @@ export default function MatchesScreen() {
   const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    loadLikedMovies();
-  }, [user?.id]);
-
-  const loadLikedMovies = async () => {
+  const loadLikedMovies = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -45,7 +41,18 @@ export default function MatchesScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadLikedMovies();
+  }, [user?.id, loadLikedMovies]);
+
+  // Recharger la liste quand on revient du détail pour détecter les changements de statut (films rejetés)
+  useFocusEffect(
+    useCallback(() => {
+      loadLikedMovies();
+    }, [loadLikedMovies])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -111,6 +111,8 @@ export default function DetailScreen() {
         );
         setUserStatus('liked');
       } else {
+        // Rejeter = supprimer de liked_movies si c'était aimé avant
+        await databaseService.removeLikedMovie(user.id, movie.id);
         setUserStatus('rejected');
       }
 
