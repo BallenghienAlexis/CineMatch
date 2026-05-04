@@ -7,7 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   View,
-  ScrollView,
+  FlatList,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -28,7 +28,6 @@ import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useThemeToggle } from '@/src/contexts/ThemeContext';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 
 const SWIPE_THRESHOLD = 100;
@@ -54,6 +53,8 @@ export default function ExploreScreen() {
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
   const isAnimatingRef = useRef(false); // Track if animation is in progress
+  const genresListRef = useRef<FlatList>(null);
+  const [genreItemWidths, setGenreItemWidths] = useState<{ [key: string]: number }>({});
   const { user, signOut } = useAuth();
   const router = useRouter();
   const colorScheme = useEffectiveColorScheme();
@@ -222,6 +223,42 @@ export default function ExploreScreen() {
     hasLoadedRef.current = false;
     loadMovies(1);
   }, [selectedGenreId, loadMovies]);
+
+  // Scroll automatiquement vers le genre sélectionné
+  useEffect(() => {
+    if (genresListRef.current && genres.length > 0) {
+      const timeoutId = setTimeout(() => {
+        try {
+          let targetIndex = 0; // "Tous" est toujours au index 0
+          if (selectedGenreId !== null) {
+            const foundIndex = genres.findIndex((g) => g.id === selectedGenreId);
+            if (foundIndex !== -1) {
+              targetIndex = foundIndex + 1; // +1 car on a "Tous" au début
+            }
+          }
+
+          // Chaque item fait environ 80-90px, avec gap de 8px
+          // "Tous" = ~50px, autres genres en moyenne ~70-80px
+          const avgItemWidth = 75;
+          const gapSize = 8;
+          const itemSize = avgItemWidth + gapSize;
+
+          // Calculer l'offset pour centrer l'item
+          // On veut que l'item soit au centre, donc offset = position - (screenWidth / 2) + (itemWidth / 2)
+          const offset = Math.max(0, targetIndex * itemSize - screenWidth / 2 + avgItemWidth / 2);
+
+          genresListRef.current?.scrollToOffset({
+            offset,
+            animated: true,
+          });
+        } catch (error) {
+          console.warn('ScrollToOffset error:', error);
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [selectedGenreId, genres]);
 
   // Vérifier si le film actuel a été swipé au retour du détail
   useFocusEffect(
@@ -498,62 +535,49 @@ export default function ExploreScreen() {
       {/* Genres Filter */}
       {!genresLoading && genres.length > 0 && (
         <View style={styles.genresSection}>
-          <ScrollView
+          <FlatList
+            ref={genresListRef}
+            data={[{ id: 'all', name: 'Tous' }, ...genres]}
+            renderItem={({ item }) => {
+              const isAll = item.id === 'all';
+              const genreId = isAll ? null : item.id;
+              const isActive = selectedGenreId === genreId;
+
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.genreChip,
+                    isActive && styles.genreChipActive,
+                    {
+                      backgroundColor: isActive
+                        ? (colorScheme === 'dark' ? '#0a7ea4' : '#0a7ea4')
+                        : (colorScheme === 'dark' ? '#333' : '#f0f0f0'),
+                    },
+                  ]}
+                  onPress={() => setSelectedGenreId(genreId)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.genreChipText,
+                      {
+                        color: isActive ? '#fff' : (colorScheme === 'dark' ? '#ccc' : '#666'),
+                      },
+                    ]}
+                  >
+                    {item.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={(item) => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.genresScrollContainer}
-          >
-            <TouchableOpacity
-              style={[
-                styles.genreChip,
-                selectedGenreId === null && styles.genreChipActive,
-                {
-                  backgroundColor: selectedGenreId === null
-                    ? (colorScheme === 'dark' ? '#0a7ea4' : '#0a7ea4')
-                    : (colorScheme === 'dark' ? '#333' : '#f0f0f0'),
-                },
-              ]}
-              onPress={() => setSelectedGenreId(null)}
-            >
-              <ThemedText
-                style={[
-                  styles.genreChipText,
-                  {
-                    color: selectedGenreId === null ? '#fff' : (colorScheme === 'dark' ? '#ccc' : '#666'),
-                  },
-                ]}
-              >
-                Tous
-              </ThemedText>
-            </TouchableOpacity>
-
-            {genres.map((genre) => (
-              <TouchableOpacity
-                key={genre.id}
-                style={[
-                  styles.genreChip,
-                  selectedGenreId === genre.id && styles.genreChipActive,
-                  {
-                    backgroundColor: selectedGenreId === genre.id
-                      ? (colorScheme === 'dark' ? '#0a7ea4' : '#0a7ea4')
-                      : (colorScheme === 'dark' ? '#333' : '#f0f0f0'),
-                  },
-                ]}
-                onPress={() => setSelectedGenreId(genre.id)}
-              >
-                <ThemedText
-                  style={[
-                    styles.genreChipText,
-                    {
-                      color: selectedGenreId === genre.id ? '#fff' : (colorScheme === 'dark' ? '#ccc' : '#666'),
-                    },
-                  ]}
-                >
-                  {genre.name}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            scrollEventThrottle={16}
+            onScrollToIndexFailed={(error) => {
+              console.warn('ScrollToIndex failed:', error);
+            }}
+          />
         </View>
       )}
     </ThemedView>
