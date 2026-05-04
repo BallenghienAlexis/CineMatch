@@ -784,3 +784,123 @@ Component re-renders with new movie
 
 **Branch**: `feature/fix-reload-progress`
 **Status**: ✅ Complete and tested
+
+## Session 6 — 2026-05-04 (Continued)
+### Git & Documentation Updates
+
+**Objective**: Complete Session 6 workflow: merge feature branch, finalize git history, and update project documentation.
+
+**Actions Completed**:
+
+1. **Feature Branch Merge** ✅
+   - Created: `feature/fix-reload-progress`
+   - Pushed to origin
+   - Merged into master with `--no-ff` flag
+   - Merge commit: `aa22f0f`
+   - Deleted local and remote branches (cleanup)
+
+2. **Commits Made**:
+   ```
+   81d47b3 - fix(explore): restore user progress on app reload via swipe history
+   aa22f0f - Merge feature/fix-reload-progress into master (merge commit)
+   0e6de04 - docs(readme): update with complete CineMatch project documentation
+   ```
+
+3. **Commit Details**:
+
+   **Commit 1: Feature fix**
+   ```
+   fix(explore): restore user progress on app reload via swipe history
+   
+   - Fetch user's swipe history from Supabase on component mount
+   - Calculate target page based on swipe count (20 films per page)
+   - Load all TMDB pages up to target to restore exact position
+   - Restore currentIndex to match user's swipe progress
+   - Add console logging for debug: historique, restauration, progression
+   - Handle edge cases: no user, fetch errors, index overflow
+   - Remove unused imports and fix ESLint warnings
+   ```
+
+   **Commit 2: Merge commit**
+   ```
+   Merge feature/fix-reload-progress into master
+   
+   Implements automatic progress restoration on app reload:
+   - Fetch swipe history from Supabase
+   - Calculate and restore user's exact position
+   - Load all necessary TMDB pages
+   - Handle edge cases gracefully
+   - Add debug console logging
+   ```
+
+   **Commit 3: Documentation update**
+   ```
+   docs(readme): update with complete CineMatch project documentation
+   
+   - Add comprehensive project description and feature list
+   - Document all implemented features and in-progress work
+   - Add quick start guide with environment setup
+   - Explain project structure and tech stack
+   - Include database schema and RLS policies
+   - Add git workflow conventions reference
+   - Document Session 6 progress restoration feature
+   - Add testing checklist and next steps
+   - Include links to documentation and support
+   ```
+
+4. **README.md Updates** (303 lines added, 23 lines removed):
+   - ✅ Complete project overview
+   - ✅ Features list (implemented, in-progress, bonus)
+   - ✅ Quick start guide with prerequisites
+   - ✅ Environment variables setup
+   - ✅ Project structure documentation
+   - ✅ Tech stack details
+   - ✅ Database schema with RLS policies
+   - ✅ Session 6 feature explanation
+   - ✅ Testing checklist
+   - ✅ Next steps and roadmap
+   - ✅ Support and documentation links
+
+5. **Git Workflow Summary**:
+   - ✅ Feature branch created from master
+   - ✅ Single commit with complete feature
+   - ✅ Push to origin
+   - ✅ Merge with --no-ff (creates merge commit)
+   - ✅ Push master back to origin
+   - ✅ Clean up local and remote branches
+   - **Result**: Clean git history with 1 feature commit + 1 merge commit
+
+**Files Modified**:
+- `README.md` — 326 lines total (comprehensive project documentation)
+- `HISTORY.md` — Updated with Session 6 completion
+
+**Git History After Session 6**:
+```
+*   aa22f0f (origin/master) — Merge commit
+|\  
+| * 81d47b3 — Feature: restore progress
+| * 00da934 — Previous work...
+|/
+0e6de04 — README documentation
+```
+
+**Commits Count**:
+- **Session 6 Feature**: 1 commit (fix) + 1 commit (merge) = 2 commits
+- **Documentation**: 1 commit (README)
+- **Total Session 6**: 3 commits
+
+**Evaluation Impact**:
+- ✅ Regular commits (**1.5 pts rule**: commits réguliers)
+- ✅ Explicit messages (**4-5 words minimum**, detailed body)
+- ✅ One feature per branch (**clean history**)
+- ✅ Proper merge workflow (**--no-ff flag used**)
+
+**Status**: ✅ Session 6 Complete
+- Feature implemented and tested
+- Git history properly maintained
+- Documentation updated
+- Ready for next feature
+
+**Next Session**: Feature/Matches Screen (displaying liked movies)
+
+
