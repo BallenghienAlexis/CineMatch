@@ -393,3 +393,105 @@ The following MUST be done manually in Supabase console:
 
 **Branch**: `feature/email-verification-and-french-ui`
 
+## Session 3 — 2026-05-04
+### Feature: TMDB API Integration + Explore (Swipe) Screen
+
+**Objective**: Implement TMDB API service and create swipe screen with gesture handling for exploring movies.
+
+**Files Created**:
+1. **`src/services/tmdb.ts`** (187 lines)
+   - Complete TMDB API service with types: Movie, MovieDetail, SearchResult
+   - Implement `getPopularMovies()` with pagination
+   - Implement `searchMovies()` with query encoding
+   - Implement `getMovieDetail()` with credits and videos
+   - Simple in-memory cache (1 hour TTL) to reduce API calls
+   - Helper methods: `getPosterUrl()`, `getYoutubeTrailerUrl()`, `getTopCast()`, `clearCache()`
+   - Comprehensive error handling
+
+2. **`src/hooks/useFormatting.ts`** (64 lines)
+   - `useDebounce()` hook for search optimization (500ms default)
+   - `useFormatDate()` hook for French locale date formatting
+   - `useGetYear()` hook to extract year from date string
+   - `useFormatRuntime()` hook to format minutes to readable format (hh:mm)
+
+3. **`src/components/MovieCard.tsx`** (128 lines)
+   - Reusable MovieCard component for displaying films
+   - Show poster, title, year, and TMDB rating as badge
+   - 2:3 aspect ratio (film standard)
+   - Overlay with dark background for text readability
+   - Fallback for missing posters
+   - Used in explore, matches, search screens
+
+4. **`app/(tabs)/explore.tsx`** (206 lines)
+   - Main swipe screen for discovering movies
+   - Implement PanResponder for left/right gesture detection
+   - 50px threshold for valid swipe
+   - Display current movie with swipe instructions
+   - Load popular movies from TMDB API with pagination
+   - Persist swipes (like/reject) to Supabase via `databaseService.addSwipeHistory()`
+   - Auto-load more movies when reaching end (batch - 5)
+   - Show loading state, error handling, and empty state
+   - Display progress counter (current / total) and action badges
+
+**Key Features Implemented**:
+- ✅ TMDB API integration (popular, search, detail endpoints)
+- ✅ Gesture-based swipe detection (PanResponder)
+- ✅ Movie persistence (like/reject to Supabase)
+- ✅ Pagination auto-load
+- ✅ Caching strategy (1 hour TTL)
+- ✅ Error handling throughout
+- ✅ French UI labels
+
+**Configuration Required**:
+1. **Get TMDB API Key**:
+   - Go to https://www.themoviedb.org/settings/api
+   - Create free account
+   - Request API key
+   - Add to `.env.local`:
+     ```env
+     EXPO_PUBLIC_TMDB_API_KEY=your_api_key_here
+     ```
+
+2. **Verify Database Tables**:
+   - `swipe_history` table exists in Supabase (created in Session 2)
+   - RLS policies allow authenticated users to insert their swipes
+
+**Commits Made** (4 commits):
+1. `feat(api): create TMDB service with movie endpoints`
+2. `feat(hooks): add formatting and debounce utilities`
+3. `feat(components): create MovieCard reusable component`
+4. `feat(explore): create swipe screen with PanResponder gesture handling`
+
+**Testing Checklist**:
+- [ ] Add TMDB API key to `.env.local`
+- [ ] Run `npm run start`
+- [ ] Navigate to "Découvrir" tab
+- [ ] Verify movies load from TMDB API
+- [ ] Swipe right (like) and left (reject)
+- [ ] Check Supabase `swipe_history` table for saved swipes
+- [ ] Verify loading state during initial load
+- [ ] Test error handling (bad API key, network error)
+- [ ] Verify pagination (loads more movies automatically)
+
+**Next Steps**:
+1. Implement Matches screen (display likes sorted by rating)
+2. Implement History screen (show all swipes with filters)
+3. Implement Movie Detail screen (synopsis, casting, trailer)
+4. Add Search screen with debounce
+5. Bonus: Genre filters before exploring
+6. Bonus: Smooth animations with Reanimated
+
+**Still Remaining Features** (from requirements):
+- ⏳ Matches screen (obligatoire)
+- ⏳ History screen (obligatoire)  
+- ⏳ Movie Detail page with casting (obligatoire)
+- ⏳ Search with debounce (obligatoire)
+- ⏳ Genre filters (bonus +1 pt)
+- ⏳ Reanimated animations (bonus +1 pt)
+
+**Branch**: `feature/tmdb-swipe-ui`
+**Status**: Ready for testing (need TMDB API key added)
+
+
+````
+
