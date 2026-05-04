@@ -50,8 +50,8 @@ export function AuthProvider(props: any) {
     const inAuthGroup = segments[0] === 'auth';
 
     if (session && inAuthGroup) {
-      // Si connecté et dans auth, rediriger vers app
-      router.replace('/(tabs)');
+      // Si connecté et dans auth, rediriger vers explore
+      router.replace('/(tabs)/explore');
     } else if (!session && !inAuthGroup) {
       // Si pas connecté et pas dans auth, rediriger vers login
       router.replace('/auth/login');

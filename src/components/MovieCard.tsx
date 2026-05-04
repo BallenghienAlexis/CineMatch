@@ -1,21 +1,21 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Movie } from '@/src/services/tmdb';
-import { tmdbService } from '@/src/services/tmdb';
+import { Movie, tmdbService } from '@/src/services/tmdb';
 import { useGetYear } from '@/src/hooks/useFormatting';
 
 type MovieCardProps = {
   movie: Movie;
   showOverlay?: boolean;
+  onPress?: () => void;
 };
 
 /**
  * Composant pour afficher une carte film avec poster, titre, année et note
  * Réutilisable pour explore, matches, search
  */
-export function MovieCard({ movie, showOverlay = true }: MovieCardProps) {
+export function MovieCard({ movie, showOverlay = true, onPress }: MovieCardProps) {
   const year = useGetYear(movie.release_date);
   const posterUrl = tmdbService.getPosterUrl(movie.poster_path);
   const rating = Math.round(movie.vote_average * 10) / 10;
@@ -29,7 +29,7 @@ export function MovieCard({ movie, showOverlay = true }: MovieCardProps) {
     );
   }
 
-  return (
+  const cardContent = (
     <ThemedView style={styles.card}>
       {/* AFFICHE EN TOP */}
       <Image
@@ -60,6 +60,12 @@ export function MovieCard({ movie, showOverlay = true }: MovieCardProps) {
       )}
     </ThemedView>
   );
+
+  if (onPress) {
+    return <TouchableOpacity onPress={onPress}>{cardContent}</TouchableOpacity>;
+  }
+
+  return cardContent;
 }
 
 const styles = StyleSheet.create({

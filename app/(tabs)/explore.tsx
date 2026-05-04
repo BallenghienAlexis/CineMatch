@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -40,6 +41,7 @@ export default function ExploreScreen() {
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
   const { user, signOut } = useAuth();
+  const router = useRouter();
   const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();
   const { toggleTheme } = useThemeToggle();
@@ -49,6 +51,15 @@ export default function ExploreScreen() {
       await signOut();
     } catch (err) {
       console.error('Logout error:', err);
+    }
+  };
+
+  const handleMoviePress = () => {
+    if (movies[currentIndex]) {
+      router.push({
+        pathname: '/detail/[movieId]',
+        params: { movieId: movies[currentIndex].id.toString() },
+      });
     }
   };
 
@@ -208,32 +219,35 @@ export default function ExploreScreen() {
     });
   }, [user?.id, pan]);
 
-  useEffect(() => {
-    panResponderRef.current = PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (evt, { dx }) => {
-        return Math.abs(dx) > 5;
-      },
-      onPanResponderMove: (evt, { dx }) => {
-        pan.x.setValue(dx);
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        const { dx, vx } = gestureState;
+   useEffect(() => {
+     panResponderRef.current = PanResponder.create({
+       onStartShouldSetPanResponder: () => true,
+       onMoveShouldSetPanResponder: (evt, { dx }) => {
+         return Math.abs(dx) > 5;
+       },
+       onPanResponderMove: (evt, { dx }) => {
+         pan.x.setValue(dx);
+       },
+       onPanResponderRelease: (evt, gestureState) => {
+         const { dx, vx } = gestureState;
 
-        if (dx > SWIPE_THRESHOLD || vx > 0.5) {
-          animateSwipe(dx, 'like');
-        } else if (dx < -SWIPE_THRESHOLD || vx < -0.5) {
-          animateSwipe(dx, 'reject');
-        } else {
-          // Retour à la position normale
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-          }).start();
-        }
-      },
-    });
-  }, [animateSwipe]);
+         if (dx > SWIPE_THRESHOLD || vx > 0.5) {
+           animateSwipe(dx, 'like');
+         } else if (dx < -SWIPE_THRESHOLD || vx < -0.5) {
+           animateSwipe(dx, 'reject');
+         } else if (Math.abs(dx) < 5 && Math.abs(vx) < 0.1) {
+           // Simple tap - ouvrir le détail
+           handleMoviePress();
+         } else {
+           // Retour à la position normale
+           Animated.spring(pan, {
+             toValue: { x: 0, y: 0 },
+             useNativeDriver: false,
+           }).start();
+         }
+       },
+     });
+   }, [animateSwipe, handleMoviePress]);
 
 
   if (loading && movies.length === 0) {

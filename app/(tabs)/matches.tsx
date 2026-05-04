@@ -7,15 +7,14 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { MovieCard } from '@/src/components/MovieCard';
-import { tmdbService } from '@/src/services/tmdb';
 import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 import { LikedMovie } from '@/src/services/supabase';
 
@@ -166,6 +165,15 @@ export default function MatchesScreen() {
 }
 
 function MovieItemCard({ movie }: { movie: LikedMovie }) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push({
+      pathname: '/detail/[movieId]',
+      params: { movieId: movie.movie_id.toString() },
+    });
+  };
+
   return (
     <View style={styles.movieContainer}>
       <MovieCard
@@ -176,8 +184,10 @@ function MovieItemCard({ movie }: { movie: LikedMovie }) {
           release_date: '',
           vote_average: movie.movie_rating || 0,
           overview: '',
+          genre_ids: [],
         }}
         showOverlay={true}
+        onPress={handlePress}
       />
     </View>
   );
