@@ -196,3 +196,200 @@ docs: create initial project documentation and AI agent guides
 2. Follow commit guidelines from `.agents/GIT_COMMIT_GUIDELINES.md`
 3. Each feature should have 3–5 commits minimum
 4. Merge to master when feature is stable
+
+## Session 2 — 2026-05-04
+### Feature: Supabase Auth Implementation
+
+**Objective**: Implement complete authentication system with Supabase and protected navigation.
+
+**Completed**:
+1. ✅ Updated `package.json` with Supabase + Expo dependencies
+   - `@supabase/supabase-js@^2.43.1`
+   - `@react-native-async-storage/async-storage@^1.23.1`
+   - `expo-secure-store@~14.0.4`
+
+2. ✅ Created Services Layer (`src/services/`)
+   - `supabase.ts` - Client initialization with secure storage (SecureStore/AsyncStorage)
+   - `auth.ts` - Auth functions (signup, login, logout, getSession, getUser)
+   - `database.ts` - Database queries (liked_movies, swipe_history CRUD)
+
+3. ✅ Created Auth Context (`src/contexts/AuthContext.tsx`)
+   - Session state management
+   - Auto-redirection logic (login ↔ app based on auth state)
+   - Loading state with activity indicator
+   - useAuth() hook for easy access
+
+4. ✅ Created Auth Screens (`src/screens/auth/`)
+   - LoginScreen: Email/password form + signup link + error handling
+   - SignupScreen: Email/password/confirm + validation + login link
+
+5. ✅ Created Auth Routes (`app/auth/`)
+   - `app/auth/_layout.tsx` - Auth stack layout
+   - `app/auth/login.tsx` - Login route
+   - `app/auth/signup.tsx` - Signup route
+
+6. ✅ Updated Root Layout (`app/_layout.tsx`)
+   - Wrapped with AuthProvider
+   - Added auth route group
+   - Auto-routing: unauthenticated → /auth/login, authenticated → /(tabs)
+
+**Architecture**:
+```
+Public Routes:
+  /auth/login
+  /auth/signup
+
+Protected Routes:
+  /(tabs)/* (requires auth)
+
+Session Persistence:
+  - SecureStore on native platforms
+  - AsyncStorage on web
+  - Auto-refresh tokens
+```
+
+**File Structure Created**:
+```
+src/
+  services/
+    ├── supabase.ts        (64 lines - Client + types)
+    ├── auth.ts            (60 lines - Auth logic)
+    └── database.ts        (75 lines - Query builders)
+  contexts/
+    └── AuthContext.tsx    (96 lines - Provider + hooks)
+  screens/
+    auth/
+      ├── LoginScreen.tsx  (110 lines)
+      └── SignupScreen.tsx (135 lines)
+
+app/
+  auth/
+    ├── _layout.tsx        (18 lines)
+    ├── login.tsx          (3 lines)
+    └── signup.tsx         (3 lines)
+```
+
+**Total Lines Added**: ~564 lines of production code
+
+**Next Steps**:
+1. Test signup/login on physical device or emulator
+2. Implement TMDB API service (`src/services/tmdb.ts`)
+3. Create Swipe UI with gesture handling
+4. Integrate database persistence on user swipes
+5. Create Matches + History screens
+
+**Branch**: `feature/supabase-auth`
+**Commit**: Will be made after this session
+
+## Session 2 — 2026-05-04
+### Email Verification + Dark Mode Fixes + French Localization
+
+**Objective**: Implement email verification workflow, fix dark mode button contrast, translate app to French.
+
+**Problems Fixed**:
+1. **Dark Mode Buttons** — Buttons were invisible in dark mode (white text on white background). 
+   - Solution: All buttons now use white text + tint color background (option B: dynamic contrast).
+   
+2. **French Localization** — App was entirely in English.
+   - Solution: Replace all hardcoded strings with French (no i18n infrastructure needed, direct strings per screen).
+   
+3. **Email Verification Flow** — Supabase requires email confirmation before profiles can be created (RLS policy error).
+   - Solution: New `VerifyEmailScreen.tsx` with 3-second polling to detect `email_verified` status.
+
+**Files Created**:
+1. **`src/screens/auth/VerifyEmailScreen.tsx`** (155 lines)
+   - Displays email confirmation waiting screen
+   - Polling interval: checks Supabase `user.user_metadata.email_verified` every 3 seconds
+   - Once verified, automatically creates user profile via `createProfile(userId, email)`
+   - Shows user email + instruction to click confirmation link
+   - Button: "Renvoyer l'email" (resend) + "Se déconnecter" (logout)
+   - Exits polling → redirects to `/(tabs)` once email confirmed
+
+2. **`app/auth/verify-email.tsx`** (3 lines)
+   - Route handler exporting VerifyEmailScreen component
+
+**Files Modified**:
+1. **`src/services/auth.ts`** 
+   - Added `createProfile(userId, email)` function (separate from signup)
+   - Modified `signup()` to NOT create profile immediately (user must verify email first)
+   - Profile creation now happens in VerifyEmailScreen after email confirmation
+
+2. **`src/contexts/AuthContext.tsx`**
+   - Added `isEmailVerified` state tracking `user.user_metadata.email_verified`
+   - New routing logic: 
+     - If user exists BUT email NOT verified → redirect to `/auth/verify-email`
+     - If user exists AND email verified → redirect to `/(tabs)` (app)
+     - If no user and not in auth group → redirect to `/auth/login`
+   - Updated context type to include `isEmailVerified` flag
+
+3. **`app/auth/_layout.tsx`**
+   - Added Stack.Screen for `verify-email` route
+
+4. **`src/screens/auth/LoginScreen.tsx`**
+   - Replaced English strings with French:
+     - "Sign In" → "Connexion"
+     - "Email and password are required" → "L'email et le mot de passe sont obligatoires"
+     - "Login failed" → "Erreur de connexion"
+     - "Password" → "Mot de passe"
+     - "Don't have an account?" → "Pas encore de compte ?"
+     - "Sign Up" → "S'inscrire"
+
+5. **`src/screens/auth/SignupScreen.tsx`**
+   - Replaced English strings with French:
+     - "Create Account" → "Créer un compte"
+     - "All fields are required" → "Tous les champs sont obligatoires"
+     - "Passwords do not match" → "Les mots de passe ne correspondent pas"
+     - "Password must be at least 6 characters" → "Le mot de passe doit contenir au moins 6 caractères"
+     - "Signup failed" → "Erreur d'inscription"
+     - "Confirm Password" → "Confirmer le mot de passe"
+     - "Sign Up" → "S'inscrire"
+     - "Already have an account?" → "Vous avez déjà un compte ?"
+     - "Sign In" → "Se connecter"
+
+**Key Technical Decisions**:
+1. **Email Polling vs Web Hook**: Polling every 3 seconds (simpler, no need for webhook infrastructure). Tradeoff: battery/UX vs simplicity.
+2. **Profile Creation Deferred**: Profile is created AFTER email verification, not at signup. This prevents RLS policy violations.
+3. **No i18n Library**: Direct French strings in each file (no JSON translation files) per user request.
+4. **Dark Mode**: Buttons use Colors[colorScheme].tint for background + white text everywhere (consistent, high contrast).
+
+**Supabase Configuration Required**:
+The following MUST be done manually in Supabase console:
+1. **Auth → Providers → Email**: 
+   - Keep "Confirm email" enabled (or set to required if not obvious)
+   - Redirect URL after email confirmation: Configure to point to `exp://localhost:8081` or your EAS Preview URL
+   
+2. **SQL Editor** — Verify RLS Policies on `profiles` table:
+   ```sql
+   -- INSERT policy allows authenticated users to create their own profile
+   CREATE POLICY "Users can insert their own profile" ON profiles
+   FOR INSERT
+   WITH CHECK (auth.uid() = id);
+   
+   -- SELECT policy allows users to view their own profile
+   CREATE POLICY "Users can view their own profile" ON profiles
+   FOR SELECT
+   USING (auth.uid() = id);
+   ```
+
+**Testing Checklist**:
+- [ ] Signup with new email → should show VerifyEmailScreen
+- [ ] Click email confirmation link in inbox → `email_verified` becomes true
+- [ ] App should automatically detect change and redirect to `/(tabs)`
+- [ ] Profile should be created in Supabase `profiles` table
+- [ ] Login should work with verified account
+- [ ] All text is now in French
+- [ ] Dark mode buttons have white text (not invisible)
+
+**Remaining Issues**:
+- ⚠️ Email confirmation redirect URL points to `localhost:3000` (web). Need to update Supabase Auth redirect settings to use Expo deep linking.
+- ⚠️ "Renvoyer l'email" button currently shows message (no actual resend logic). Will need Edge Function or custom resend logic in future.
+
+**Next Steps**:
+1. Test signup/login flow in Expo Go
+2. Verify email confirmation works (create test email account)
+3. Implement TMDB API service
+4. Build Swipe UI
+5. Create Matches screen
+
+**Branch**: `feature/email-verification-and-french-ui`
+
