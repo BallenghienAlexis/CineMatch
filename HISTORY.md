@@ -904,3 +904,209 @@ Component re-renders with new movie
 **Next Session**: Feature/Matches Screen (displaying liked movies)
 
 
+
+## Session 7 — 2026-05-04
+### Feature: Matches Screen (Display Liked Movies)
+
+**Objective**: Create screen to display movies the user has liked and view them in a grid layout.
+
+**Files Created**:
+1. **`app/(tabs)/matches.tsx`** (Main Matches screen)
+   - Display all liked movies from Supabase `liked_movies` table
+   - Show movie count in header
+   - Grid layout with 2 columns
+   - Display movie poster with rating badge
+   - Pull-to-refresh capability
+   - Empty state when no movies liked
+   - French labels and formatting
+
+2. **MatchesScreen Component** (in matches.tsx)
+   - Fetch liked movies on component mount
+   - Loading state with ActivityIndicator
+   - Error handling
+   - Refresh functionality with FlatList RefreshControl
+   - Movie grid display
+
+**Files Modified**:
+1. **`app/(tabs)/_layout.tsx`**
+   - Added Matches tab with heart icon (❤️ Aims)
+   - Updated tab navigation to include new Matches screen
+
+2. **`app/(tabs)/explore.tsx`**
+   - Modified to add liked movies to database when swiping right
+   - Swipe right (like) now calls `addLikedMovie()` to persist movie
+
+**Key Features Implemented**:
+- ✅ Display all liked movies in grid (2 columns)
+- ✅ Show movie poster images
+- ✅ Display rating for each movie
+- ✅ Pull-to-refresh to update liked movies list
+- ✅ Empty state message
+- ✅ Movie count in header
+- ✅ Loading state
+- ✅ Error handling
+
+**Commits Made** (1 main commit):
+1. `feat(matches): add liked movies screen and new matches tab`
+
+**Database Used**:
+- Table: `liked_movies` (Supabase)
+- Fields: user_id, movie_id, movie_title, movie_rating, poster_path
+
+**Testing Checklist**:
+- [x] Navigate to "Aims" tab
+- [x] See empty state initially
+- [x] Like a movie in Explore tab
+- [x] Movie appears in Matches/Aims screen
+- [x] Rating displayed correctly
+- [x] Pull-to-refresh works
+- [x] Grid layout displays 2 columns properly
+
+**Status**: ✅ Complete
+
+---
+
+## Session 8 — 2026-05-04
+### Feature: History Screen (Swipe History with Filters)
+
+**Objective**: Create screen to display all swipes (both likes and rejects) with filtering options.
+
+**Files Created**:
+1. **`app/(tabs)/history.tsx`** (Main History screen)
+   - Display all swipes from Supabase `swipe_history` table
+   - Filter by: All / Liked / Rejected
+   - Show action badges (heart icon for like, X icon for reject)
+   - Display movie title, action, and date
+   - Color-coded by action (green for like, red for reject)
+   - French locale date formatting
+   - Empty state when no swipe history
+   - Pull-to-refresh capability
+
+2. **HistoryItem Component** (in history.tsx)
+   - Display individual swipe entry
+   - Show badge with action icon and color
+   - Format action label in French
+   - Format date in French locale
+
+**Files Modified**:
+1. **`app/(tabs)/_layout.tsx`**
+   - Added History tab with list icon (📜 Historique)
+   - Updated tab navigation to include new History screen
+
+**Key Features Implemented**:
+- ✅ Display all swipes with action (like/reject)
+- ✅ Filter options: All / Liked / Rejected
+- ✅ Color-coded badges (green/red)
+- ✅ Icon indicators (heart/X)
+- ✅ French date formatting
+- ✅ Movie title display
+- ✅ Empty state message
+- ✅ Pull-to-refresh functionality
+- ✅ Loading state
+- ✅ Error handling
+
+**Commits Made** (1 main commit):
+1. `feat(history): add swipe history screen with filters`
+
+**Database Used**:
+- Table: `swipe_history` (Supabase)
+- Fields: user_id, movie_id, movie_title, action, created_at
+
+**Testing Checklist**:
+- [x] Navigate to "Historique" tab
+- [x] See all swipes (likes and rejects)
+- [x] Filter by "All" shows everything
+- [x] Filter by "Liked" shows only likes (heart icon, green)
+- [x] Filter by "Rejected" shows only rejects (X icon, red)
+- [x] Dates formatted in French
+- [x] Pull-to-refresh works
+- [x] Empty state shows when no history
+
+**Status**: ✅ Complete
+
+---
+
+## Sessions 7 & 8 — Additional Fixes & Improvements
+
+**Session 7-8 Refinements** (Multiple commits):
+
+1. **`fd72ac5`** — Add refresh control and safe area handling
+   - Added RefreshControl to both Matches and History screens
+   - Implemented useSafeAreaInsets for proper padding on notch devices
+   - Better handling of screen insets (top for notch, bottom for home bar)
+   - Adapted to iPhone notch, status bar, and bottom safe areas
+
+2. **`4ba5cfd`** — Add poster_path support
+   - Updated `LikedMovie` type in supabase.ts to include poster_path
+   - Modified database.ts `addLikedMovie()` to accept and save poster_path
+   - Updated explore.tsx to pass movie.poster_path when liking
+   - Created SQL migration script for adding poster_path column
+   - Now properly stores and displays movie poster images
+
+3. **`ab0d3af`** — Enable pull-to-refresh on empty states
+   - Modified matches.tsx to show empty state with ScrollView + RefreshControl
+   - Modified history.tsx to show empty state with ScrollView + RefreshControl
+   - Users can refresh even when no data exists
+   - Header and title maintain visibility in empty state
+
+4. **`d3d0678`** — Add git workflow guide
+   - Created GIT_WORKFLOW.md for team collaboration
+   - Document branch naming conventions
+   - Explain commit message standards
+   - Detail proper PR and merge process
+
+5. **`d8c231b`** — Tab improvements
+   - Removed Home tab (no longer needed)
+   - Renamed tabs to French: Découvrir, Aims, Historique
+   - Updated icons to match functionality
+   - Cleaned up navigation structure
+
+6. **`18b3223`** — Fix icon mappings
+   - Added missing Material Icons mappings
+   - film.fill → movie (Découvrir tab)
+   - heart.fill → favorite (Aims tab)
+   - list.bullet.rectangle.fill → list (Historique tab)
+
+7. **`4b9fef7` & `00da934`** — Loading stability fixes
+   - Fixed unnecessary movie list reloads
+   - Used useRef flag to prevent resets
+   - Improved hot reload behavior
+
+**Files Modified in Sessions 7-8**:
+- `app/(tabs)/_layout.tsx` — Updated tab structure
+- `app/(tabs)/matches.tsx` — Matches screen implementation
+- `app/(tabs)/history.tsx` — History screen implementation
+- `app/(tabs)/explore.tsx` — Added swipe persistence
+
+**Commits Summary for Sessions 7 & 8**:
+```
+ae41933 - feat(matches): add liked movies screen
+26c557b - feat(history): add swipe history screen
+fd72ac5 - feat: refresh control and safe area handling
+4ba5cfd - fix: poster_path support
+ab0d3af - fix: pull-to-refresh on empty states
+d3d0678 - docs: git workflow guide
+d8c231b - feat(tabs): tab improvements
+18b3223 - fix(icons): icon mappings
+4b9fef7 - fix: prevent unnecessary reload
+00da934 - fix: useRef flag for stability
+```
+
+**Total Commits**: 10 commits across Sessions 7-8
+**Features Implemented**: 2 major screens + 8 supporting fixes/improvements
+
+**Status**: ✅ Sessions 7 & 8 Complete
+- Matches screen displaying liked movies
+- History screen with filtering
+- UI/UX improvements
+- Icon and navigation refinements
+- Pull-to-refresh functionality
+- Safe area handling
+
+**Next Steps**:
+1. Create Movie Detail screen
+2. Add Search functionality with debounce
+3. Consider genre filters (bonus)
+4. Polish with animations (bonus)
+
+
