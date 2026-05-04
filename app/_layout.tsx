@@ -3,26 +3,65 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider } from '@/src/contexts/AuthContext';
+import { ThemeToggleProvider, useThemeToggle } from '@/src/contexts/ThemeContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+// Thème clair amélioré avec meilleure visibilité
+const LightThemeImproved = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#0a7ea4',
+    background: '#FFFFFF',
+    card: '#F5F5F5',
+    text: '#000000',
+    border: '#E5E5E5',
+    notification: '#0a7ea4',
+  },
+};
+
+// Thème sombre amélioré
+const DarkThemeImproved = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: '#fff',
+    background: '#000000',
+    card: '#1a1a1a',
+    text: '#ECEDEE',
+    border: '#2a2a2a',
+    notification: '#fff',
+  },
+};
+
+function RootLayoutContent() {
+  const { themeMode } = useThemeToggle();
+
+  // Utiliser le thème forcé
+  const isDark = themeMode === 'dark';
 
   return (
+    <ThemeProvider value={isDark ? DarkThemeImproved : LightThemeImproved}>
+      <Stack>
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+      </Stack>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <ThemeToggleProvider>
+        <RootLayoutContent />
+      </ThemeToggleProvider>
     </AuthProvider>
   );
 }

@@ -6,15 +6,20 @@ import {
   PanResponderInstance,
   Animated,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { MovieCard } from '@/src/components/MovieCard';
 import { tmdbService, Movie } from '@/src/services/tmdb';
 import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useThemeToggle } from '@/src/contexts/ThemeContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 
 const SWIPE_THRESHOLD = 100;
 const { width: screenWidth } = Dimensions.get('window');
@@ -34,8 +39,18 @@ export default function ExploreScreen() {
   const currentIndexRef = useRef(0);
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
-  const { user } = useAuth();
-  const colorScheme = useColorScheme() ?? 'light';
+  const { user, signOut } = useAuth();
+  const colorScheme = useEffectiveColorScheme();
+  const insets = useSafeAreaInsets();
+  const { toggleTheme } = useThemeToggle();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   // Mettre à jour les refs quand les states changent
   useEffect(() => {
@@ -253,7 +268,48 @@ export default function ExploreScreen() {
   const currentMovie = movies[currentIndex];
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[
+        styles.container,
+        {
+          backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+        },
+      ]}
+    >
+      {/* Theme toggle button - top left with safe area */}
+      <TouchableOpacity
+        style={[
+          styles.themeButton,
+          {
+            top: insets.top + 12,
+            left: 12,
+            backgroundColor: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
+          },
+        ]}
+        onPress={toggleTheme}
+      >
+        <Ionicons
+          name={colorScheme === 'dark' ? 'sunny' : 'moon'}
+          size={24}
+          color={colorScheme === 'dark' ? '#000000' : '#FFFFFF'}
+        />
+      </TouchableOpacity>
+
+      {/* Logout button - top right with safe area */}
+      <TouchableOpacity
+        style={[
+          styles.logoutButton,
+          {
+            top: insets.top + 12,
+            right: 12,
+            backgroundColor: '#FF3B30',
+          },
+        ]}
+        onPress={handleLogout}
+      >
+        <Ionicons name="power" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {/* Fond progressif like (vert) */}
       <Animated.View
         style={[
@@ -353,6 +409,36 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(244, 67, 54, 0.4)',
     zIndex: 5,
+  },
+  logoutButton: {
+    position: 'absolute',
+    right: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  themeButton: {
+    position: 'absolute',
+    left: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
 

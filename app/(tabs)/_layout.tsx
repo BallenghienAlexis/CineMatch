@@ -5,17 +5,29 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useEffectiveColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <Tabs
+      key={`tabs-${colorScheme}`}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: isDark ? '#fff' : '#0a7ea4',
+        tabBarInactiveTintColor: isDark ? '#888' : '#666',
+        tabBarActiveBackgroundColor: isDark ? '#1a1a1a' : '#F5F5F5',
+        tabBarInactiveBackgroundColor: isDark ? '#000000' : '#FFFFFF',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          color: isDark ? '#fff' : '#000000',
+        },
         headerShown: false,
         tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="explore"
         options={{
