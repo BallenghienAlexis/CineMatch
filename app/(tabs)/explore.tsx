@@ -71,17 +71,17 @@ export default function ExploreScreen() {
     }
   }, []);
 
-  // Charger les films au montage
+  // Charger les films au montage (une seule fois)
   useEffect(() => {
     loadMovies(1);
-  }, [loadMovies]);
+  }, []); // Dépendance vide = une seule execution
 
   // Charger plus de films quand la page change
   useEffect(() => {
     if (page > 1) {
       loadMovies(page);
     }
-  }, [page, loadMovies]);
+  }, [page]);
 
   // Calculer l'angle de rotation en fonction du swipe (en degrés)
   const rotationValue = pan.x.interpolate({
