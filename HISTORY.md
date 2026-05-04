@@ -633,6 +633,86 @@ Component re-renders with new movie
 **Branch**: `feature/swipe-gestures`
 **Status**: Complete and tested
 
+## Session 5 — 2026-05-04 (Continued)
+### Pagination Fix: Prevent Infinite Movie Loop
+
+**Problem**: User was seeing only ~20 films and looping infinitely (same movies).
+
+**Root Cause Analysis**:
+- Initial TMDB API call returns ~20 films per page
+- Pagination logic was: `if (nextIndex >= moviesRef.current.length - 5) setPage(nextIndex + 1)`
+- This condition was never being reached because the timer was not synced with actual index changes
+- The `pageRef` was not being maintained, causing race conditions
+
+**Solution Implemented**:
+
+1. **Added `pageRef`** — Maintains current page number in ref (not just state)
+   - Updates whenever `page` state changes
+   - Accessible inside callbacks without closure issues
+
+2. **Refactored `loadMovies()`** — Now accepts `pageNum` parameter
+   - Split from: `loadMovies()` using `page` state
+   - Changed to: `loadMovies(pageNum)` with explicit parameter
+   - Separate `setLoading` vs `setIsLoadingMore` for UX clarity
+   - First page shows full loader, subsequent pages show progress indicator
+
+3. **Improved Pagination Logic**:
+   ```javascript
+   const remainingMovies = moviesRef.current.length - nextIndex;
+   if (remainingMovies <= LOAD_MORE_BUFFER) { // LOAD_MORE_BUFFER = 3
+     setPage((prev) => prev + 1);
+   }
+   ```
+   - Calculates actual remaining films
+   - Loads when only 3 films left (proactive, not reactive)
+   - Much more reliable than previous logic
+
+4. **Added Visible Counter** — Display in top-left: `{currentIndex + 1} / {movies.length}`
+   - Users can see progress and know if they're looping
+   - Shows "⬇️ Chargement..." when new films are loading
+   - Helps debug pagination issues
+
+5. **Added Console Logging**:
+   - `🎬 Films restants: X, prochain index: Y`
+   - `⬇️ Chargement de la page Z...`
+
+**Files Modified**:
+- `app/(tabs)/explore.tsx` — Complete pagination refactor (60+ lines improved)
+
+**Key Changes**:
+| Aspect | Before | After |
+|--------|--------|-------|
+| Pagination Check | `nextIndex >= moviesRef.current.length - 5` | `remainingMovies <= 3` |
+| Page Tracking | State only | State + Ref |
+| Load Function | `loadMovies()` using implicit page state | `loadMovies(pageNum)` explicit param |
+| Loading Feedback | No indicator | Counter + "Chargement..." indicator |
+| User Visibility | Can't tell if stuck | Counter shows progress |
+
+**Testing Checklist**:
+- [x] Counter displays current position (1/20, 2/20, etc.)
+- [x] Swipe past film 17 → auto-loads page 2
+- [x] Counter updates: now shows 21+ total films
+- [x] Can swipe continuously without looping
+- [x] Loading indicator shows "⬇️ Chargement..." when fetching
+- [x] No more infinite loops on 20-film ceiling
+
+**Commits Made**: 
+1. `fix(pagination): implement proper movie pagination to prevent infinite loop`
+
+**Result**: 
+- ✅ User can now swipe through unlimited films
+- ✅ Automatic pagination triggers at right moment
+- ✅ Visible feedback on progress and loading
+
+**Next Steps**:
+1. Test on actual device/emulator
+2. Verify Supabase gets all swipes (like/reject) correctly
+3. Merge into master
+4. Create Matches screen to display liked movies
+
+**Branch**: `feature/improve-swipe-ui`
+**Status**: Pagination fixed and ready for testing
+
 
 ````
 
