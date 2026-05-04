@@ -19,6 +19,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const SWIPE_THRESHOLD = 100;
 const { width: screenWidth } = Dimensions.get('window');
+const LOAD_MORE_BUFFER = 3; // Charger les films 3 avant la fin
 
 export default function ExploreScreen() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -26,11 +27,13 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const panResponderRef = useRef<PanResponderInstance | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
   const moviesRef = useRef<Movie[]>([]);
   const currentIndexRef = useRef(0);
+  const pageRef = useRef(1);
   const { user } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
 
@@ -43,22 +46,41 @@ export default function ExploreScreen() {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
 
-  const loadMovies = useCallback(async () => {
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+
+  const loadMovies = useCallback(async (pageNum: number) => {
     try {
-      setLoading(true);
+      if (pageNum === 1) {
+        setLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
       setError(null);
-      const result = await tmdbService.getPopularMovies(page);
+      const result = await tmdbService.getPopularMovies(pageNum);
       setMovies((prev) => [...prev, ...result.results]);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des films');
     } finally {
-      setLoading(false);
+      if (pageNum === 1) {
+        setLoading(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
-  }, [page]);
+  }, []);
 
-  // Charger les films au montage et quand la page change
+  // Charger les films au montage
   useEffect(() => {
-    loadMovies();
+    loadMovies(1);
+  }, [loadMovies]);
+
+  // Charger plus de films quand la page change
+  useEffect(() => {
+    if (page > 1) {
+      loadMovies(page);
+    }
   }, [page, loadMovies]);
 
   // Calculer l'angle de rotation en fonction du swipe (en degrés)
@@ -96,7 +118,12 @@ export default function ExploreScreen() {
       const nextIndex = currentIndexRef.current + 1;
       setCurrentIndex(nextIndex);
 
-      if (nextIndex >= moviesRef.current.length - 5) {
+      // Vérifier si on doit charger plus de films
+      const remainingMovies = moviesRef.current.length - nextIndex;
+      console.log(`🎬 Films restants: ${remainingMovies}, prochain index: ${nextIndex}`);
+
+      if (remainingMovies <= LOAD_MORE_BUFFER) {
+        console.log(`⬇️ Chargement de la page ${pageRef.current + 1}...`);
         setPage((prev) => prev + 1);
       }
     });
@@ -130,9 +157,6 @@ export default function ExploreScreen() {
     });
   }, [animateSwipe]);
 
-  useEffect(() => {
-    loadMovies();
-  }, [page, loadMovies]);
 
   if (loading && movies.length === 0) {
     return (
@@ -167,6 +191,12 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Indicateur de pagination en haut */}
+      <View style={styles.counter}>
+        <ThemedText style={styles.counterText}>
+          {currentIndex + 1} / {movies.length} {isLoadingMore ? '⬇️ Chargement...' : ''}
+        </ThemedText>
+      </View>
       {/* Fond progressif like (vert) */}
       <Animated.View
         style={[
@@ -227,6 +257,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+  },
+  counter: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    zIndex: 10,
+  },
+  counterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
   },
   cardContainer: {
     width: screenWidth * 0.9,
