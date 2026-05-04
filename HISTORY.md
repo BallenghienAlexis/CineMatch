@@ -217,7 +217,7 @@ docs: create initial project documentation and AI agent guides
    - Session state management
    - Auto-redirection logic (login ↔ app based on auth state)
    - Loading state with activity indicator
-   - useAuth() hook for easy access
+   - `useAuth()` hook for easy access
 
 4. ✅ Created Auth Screens (`src/screens/auth/`)
    - LoginScreen: Email/password form + signup link + error handling
@@ -713,6 +713,74 @@ Component re-renders with new movie
 **Branch**: `feature/improve-swipe-ui`
 **Status**: Pagination fixed and ready for testing
 
+## Session 6 — 2026-05-04
+### Feature: Restore User Progress on App Reload
 
-````
+**Objective**: Fix issue where pressing "R" in Expo console resets app to first movie (currentIndex = 0). Implement automatic progress restoration on app reload.
 
+**Problem Description**:
+- User swipes through N films (e.g., swipes 15 films)
+- App hot-reloads (Expo "R" command)
+- currentIndex resets to 0
+- User sees first film again (lost progress)
+
+**Root Cause**:
+- State was reset on reload
+- No persistence of currentIndex in AsyncStorage or other storage
+- Only database had swipe history (liked_movies, swipe_history tables)
+
+**Solution Implemented**:
+
+1. **Auto-Restore on Component Mount** — `app/(tabs)/explore.tsx` (80+ lines added)
+   - Check: `!hasLoadedRef.current && movies.length === 0 && user?.id`
+   - Fetch `databaseService.getSwipeHistory(user.id)` → returns all user's swipes
+   - Calculate: `swipeCount = swipeHistory.length` = current index
+   - Calculate: `targetPage = Math.floor(swipeCount / 20) + 1`
+   - Load ALL pages up to targetPage via TMDB API loop
+   - Set `currentIndex = Math.min(swipeCount, allMovies.length - 1)`
+   - Result: User is at exact position after reload
+
+2. **Added Console Logging**:
+   - `📊 Historique: X swipes détectés`
+   - `🔄 Restauration: page Y, index Z`
+   - `✅ Progression restaurée: Z/TOTAL films`
+
+3. **Edge Cases Handled**:
+   - If no user logged in: normal flow (load page 1)
+   - If swipeCount exceeds allMovies loaded: clamp to safe index
+   - If swipe history fetch fails: fallback to normal load
+   - If targetPage too large: gracefully load available pages
+
+**Files Modified**:
+- `app/(tabs)/explore.tsx` — Added restoration logic + dependencies
+
+**Code Quality Fixes** (during implementation):
+- ✅ Removed unused imports (View, AsyncStorage)
+- ✅ Fixed TypeScript null vs undefined type mismatch
+- ✅ Fixed ESLint hooks warnings (dependency arrays)
+- ✅ Disabled problematic dependency warnings (PanResponder effects)
+
+**Testing Checklist**:
+- [x] Swipe through 10+ films
+- [x] Press "R" in Expo console
+- [x] App reloads at swipe #10 (not swipe #1)
+- [x] Console shows restoration logs
+- [x] All films load correctly
+- [x] Can continue swiping from restored position
+- [x] No infinite loops or errors
+
+**Commits Made** (1 commit):
+1. `fix(explore): restore user progress on app reload via swipe history`
+
+**Result**: 
+- ✅ User progress persisted across hot reloads
+- ✅ Seamless UX (no progress loss)
+- ✅ Works with multi-page film lists
+
+**Next Steps**:
+1. Merge into master
+2. Create feature/matches-screen for displaying liked movies
+3. Create feature/history-screen for showing all swipes
+
+**Branch**: `feature/fix-reload-progress`
+**Status**: ✅ Complete and tested
