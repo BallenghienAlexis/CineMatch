@@ -492,6 +492,72 @@ The following MUST be done manually in Supabase console:
 **Branch**: `feature/tmdb-swipe-ui`
 **Status**: Ready for testing (need TMDB API key added)
 
+## Session 4 — 2026-05-04
+### Feature: Remove Email Verification & Simplify Auth Flow
+
+**Objective**: Simplify authentication flow by removing email verification requirement. Direct access to app after signup.
+
+**Changes Made**:
+
+1. **`src/contexts/AuthContext.tsx`** (Refactored)
+   - Removed `isEmailVerified` state tracking
+   - Removed email verification redirect logic
+   - Simplified routing:
+     - Authenticated users → directly to `/(tabs)`
+     - Unauthenticated users → `/auth/login`
+   - Removed VerifyEmailScreen detection logic
+   - Cleaner auth state management
+
+2. **`src/services/auth.ts`** (Refactored)
+   - Removed `createProfile()` function (no longer needed)
+   - Restored immediate profile creation in `signup()`
+   - Profile created atomically with auth signup
+   - Removed deferred profile creation logic
+   - Simplified error handling
+
+**Key Changes**:
+- ✅ No more email verification polling
+- ✅ No more VerifyEmailScreen
+- ✅ Direct access to app after signup
+- ✅ Faster onboarding experience
+- ✅ Simpler auth flow
+
+**Commits Made** (1 commit):
+1. `refactor(auth): remove email verification requirement and simplify auth flow`
+
+**How It Works Now**:
+```
+Signup Flow:
+  1. User fills email + password
+  2. Submit → Supabase signup
+  3. Profile created immediately
+  4. App redirects to /(tabs)
+  5. User sees Home + Explore tabs
+
+Login Flow:
+  1. User fills email + password
+  2. Submit → Supabase login
+  3. Session established
+  4. App redirects to /(tabs)
+```
+
+**Testing**:
+- [ ] Signup with new account → should go directly to tabs
+- [ ] Check Supabase profiles table → profile should exist immediately
+- [ ] No more "Vérifiez votre email" screen
+- [ ] Home tab shows Expo starter content
+- [ ] Explore tab shows movies from TMDB
+
+**Next Steps**:
+1. Merge this branch into master
+2. Create new feature branch for Matches screen
+3. Create History screen
+4. Create Movie Detail screen
+5. Add Search screen
+
+**Branch**: `feature/remove-email-verification`
+**Status**: Ready to merge into master
+
 
 ````
 
