@@ -115,7 +115,7 @@ export default function VerifyEmailScreen() {
         </ThemedView>
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: Colors[colorScheme].tint }]}
+          style={[styles.button, { backgroundColor: Colors[colorScheme].button }]}
           onPress={handleResendEmail}
           disabled={loading}
         >
@@ -123,7 +123,7 @@ export default function VerifyEmailScreen() {
             <ActivityIndicator color="white" />
           ) : (
             <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
-              Renvoyer l&#39;email
+              Renvoyer l'email
             </ThemedText>
           )}
         </TouchableOpacity>

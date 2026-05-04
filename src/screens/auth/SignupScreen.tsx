@@ -113,7 +113,7 @@ export default function SignupScreen() {
         />
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: Colors[colorScheme].tint }]}
+          style={[styles.button, { backgroundColor: Colors[colorScheme].button }]}
           onPress={handleSignup}
           disabled={loading}
         >

@@ -86,7 +86,7 @@ export default function LoginScreen() {
         />
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: Colors[colorScheme].tint }]}
+          style={[styles.button, { backgroundColor: Colors[colorScheme].button }]}
           onPress={handleLogin}
           disabled={loading}
         >
