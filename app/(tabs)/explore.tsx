@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   PanResponderInstance,
+  Animated,
 } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -15,7 +16,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-const SWIPE_THRESHOLD = 50;
+const SWIPE_THRESHOLD = 120; // Plus facile à déclencher
 
 export default function ExploreScreen() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -25,6 +26,7 @@ export default function ExploreScreen() {
   const [page, setPage] = useState(1);
 
   const panResponderRef = useRef<PanResponderInstance | null>(null);
+  const position = useRef(new Animated.ValueXY()).current;
   const { user } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
 
@@ -32,12 +34,21 @@ export default function ExploreScreen() {
     panResponderRef.current = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (evt, { dx, dy }) => {
+        position.setValue({ x: dx, y: dy });
+      },
       onPanResponderRelease: (evt, gestureState) => {
         const { dx } = gestureState;
         if (dx > SWIPE_THRESHOLD) {
-          handleSwipe('like');
+          handleSwipe('like', dx);
         } else if (dx < -SWIPE_THRESHOLD) {
-          handleSwipe('reject');
+          handleSwipe('reject', dx);
+        } else {
+          // Retour à la position normale si pas assez swipé
+          Animated.spring(position, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }).start();
         }
       },
     });
@@ -60,7 +71,7 @@ export default function ExploreScreen() {
     }
   };
 
-  const handleSwipe = async (action: 'like' | 'reject') => {
+  const handleSwipe = async (action: 'like' | 'reject', dx: number) => {
     if (currentIndex >= movies.length) return;
 
     const movie = movies[currentIndex];
@@ -78,13 +89,22 @@ export default function ExploreScreen() {
       }
     }
 
-    const nextIndex = currentIndex + 1;
-    setCurrentIndex(nextIndex);
+    // Animer la carte vers la sortie
+    Animated.timing(position, {
+      toValue: { x: dx > 0 ? 500 : -500, y: -500 },
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => {
+      // Après l'animation, réinitialiser et passer au film suivant
+      position.setValue({ x: 0, y: 0 });
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
 
-    if (nextIndex >= movies.length - 5) {
-      setPage((prev) => prev + 1);
-      loadMovies();
-    }
+      if (nextIndex >= movies.length - 5) {
+        setPage((prev) => prev + 1);
+        loadMovies();
+      }
+    });
   };
 
   if (loading && movies.length === 0) {
@@ -127,26 +147,22 @@ export default function ExploreScreen() {
         </ThemedText>
       </View>
 
-      <View
-        style={styles.gestureContainer}
+      <Animated.View
+        style={[
+          styles.gestureContainer,
+          {
+            transform: position.getLayout().transform,
+          },
+        ]}
         {...panResponderRef.current?.panHandlers}
       >
         <MovieCard movie={currentMovie} showOverlay={true} />
-      </View>
+      </Animated.View>
 
       <View style={styles.instructions}>
         <ThemedText style={{ fontSize: 12, textAlign: 'center', opacity: 0.6 }}>
           ← Glisser à gauche pour rejeter | Glisser à droite pour aimer →
         </ThemedText>
-      </View>
-
-      <View style={styles.statsContainer}>
-        <View style={styles.statBadge}>
-          <ThemedText style={{ fontSize: 12 }}>❌ Rejeter</ThemedText>
-        </View>
-        <View style={styles.statBadge}>
-          <ThemedText style={{ fontSize: 12 }}>❤️ Aimer</ThemedText>
-        </View>
       </View>
     </ThemedView>
   );
@@ -175,18 +191,6 @@ const styles = StyleSheet.create({
   },
   instructions: {
     paddingVertical: 8,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingBottom: 16,
-  },
-  statBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ccc',
   },
 });
 
