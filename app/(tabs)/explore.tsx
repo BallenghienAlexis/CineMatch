@@ -16,8 +16,10 @@ import { MovieCard } from '@/src/components/MovieCard';
 import { tmdbService, Movie } from '@/src/services/tmdb';
 import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useThemeToggle } from '@/src/contexts/ThemeContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 
 const SWIPE_THRESHOLD = 100;
 const { width: screenWidth } = Dimensions.get('window');
@@ -38,8 +40,9 @@ export default function ExploreScreen() {
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
   const { user, signOut } = useAuth();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();
+  const { toggleTheme } = useThemeToggle();
 
   const handleLogout = async () => {
     try {
@@ -265,7 +268,33 @@ export default function ExploreScreen() {
   const currentMovie = movies[currentIndex];
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[
+        styles.container,
+        {
+          backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+        },
+      ]}
+    >
+      {/* Theme toggle button - top left with safe area */}
+      <TouchableOpacity
+        style={[
+          styles.themeButton,
+          {
+            top: insets.top + 12,
+            left: 12,
+            backgroundColor: colorScheme === 'dark' ? '#FFFFFF' : '#000000',
+          },
+        ]}
+        onPress={toggleTheme}
+      >
+        <Ionicons
+          name={colorScheme === 'dark' ? 'sunny' : 'moon'}
+          size={24}
+          color={colorScheme === 'dark' ? '#000000' : '#FFFFFF'}
+        />
+      </TouchableOpacity>
+
       {/* Logout button - top right with safe area */}
       <TouchableOpacity
         style={[
@@ -384,6 +413,21 @@ const styles = StyleSheet.create({
   logoutButton: {
     position: 'absolute',
     right: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  themeButton: {
+    position: 'absolute',
+    left: 12,
     width: 44,
     height: 44,
     borderRadius: 22,

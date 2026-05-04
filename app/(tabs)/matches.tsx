@@ -16,6 +16,7 @@ import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 import { LikedMovie } from '@/src/services/supabase';
 
 export default function MatchesScreen() {
@@ -24,7 +25,7 @@ export default function MatchesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -75,10 +76,22 @@ export default function MatchesScreen() {
   // État vide avec pull-to-refresh activé
   if (likedMovies.length === 0) {
     return (
-      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      <ThemedView
+        style={[
+          styles.container,
+          {
+            paddingTop: insets.top,
+            backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+          },
+        ]}
+      >
         <View style={styles.header}>
-          <ThemedText style={styles.title}>Mes Films Aimés</ThemedText>
-          <ThemedText style={styles.subtitle}>0 film</ThemedText>
+          <ThemedText style={[styles.title, { color: colorScheme === 'dark' ? '#ECEDEE' : '#000000' }]}>
+            Mes Films Aimés
+          </ThemedText>
+          <ThemedText style={[styles.subtitle, { color: colorScheme === 'dark' ? '#999' : '#666' }]}>
+            0 film
+          </ThemedText>
         </View>
 
         <ScrollView
@@ -99,7 +112,7 @@ export default function MatchesScreen() {
             Aucun film aimé pour le moment ❤️
           </ThemedText>
           <ThemedText style={{ textAlign: 'center', marginTop: 8, fontSize: 14, opacity: 0.6 }}>
-            Allez dans l'onglet Découvrir et swipez des films!
+            Allez dans l&#39;onglet Découvrir et swipez des films!
           </ThemedText>
         </ScrollView>
       </ThemedView>
@@ -107,11 +120,21 @@ export default function MatchesScreen() {
   }
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+    <ThemedView
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+        },
+      ]}
+    >
       {/* En-tête */}
       <View style={styles.header}>
-        <ThemedText style={styles.title}>Mes Films Aimés</ThemedText>
-        <ThemedText style={styles.subtitle}>
+        <ThemedText style={[styles.title, { color: colorScheme === 'dark' ? '#ECEDEE' : '#000000' }]}>
+          Mes Films Aimés
+        </ThemedText>
+        <ThemedText style={[styles.subtitle, { color: colorScheme === 'dark' ? '#999' : '#666' }]}>
           {likedMovies.length} film{likedMovies.length > 1 ? 's' : ''}
         </ThemedText>
       </View>

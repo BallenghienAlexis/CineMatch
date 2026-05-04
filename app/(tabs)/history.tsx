@@ -15,6 +15,7 @@ import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useEffectiveColorScheme } from '@/hooks/use-effective-color-scheme';
 import { SwipeHistory } from '@/src/services/supabase';
 import { useFormatDate } from '@/src/hooks/useFormatting';
 
@@ -27,7 +28,7 @@ export default function HistoryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
   const { user } = useAuth();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -84,10 +85,22 @@ export default function HistoryScreen() {
 
   if (history.length === 0) {
     return (
-      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      <ThemedView
+        style={[
+          styles.container,
+          {
+            paddingTop: insets.top,
+            backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+          },
+        ]}
+      >
         <View style={styles.header}>
-          <ThemedText style={styles.title}>Historique des Swipes</ThemedText>
-          <ThemedText style={styles.subtitle}>0 swipe</ThemedText>
+          <ThemedText style={[styles.title, { color: colorScheme === 'dark' ? '#ECEDEE' : '#000000' }]}>
+            Historique des Swipes
+          </ThemedText>
+          <ThemedText style={[styles.subtitle, { color: colorScheme === 'dark' ? '#999' : '#666' }]}>
+            0 swipe
+          </ThemedText>
         </View>
 
         <ScrollView
@@ -116,11 +129,21 @@ export default function HistoryScreen() {
   }
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+    <ThemedView
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+        },
+      ]}
+    >
       {/* En-tête */}
       <View style={styles.header}>
-        <ThemedText style={styles.title}>Historique des Swipes</ThemedText>
-        <ThemedText style={styles.subtitle}>
+        <ThemedText style={[styles.title, { color: colorScheme === 'dark' ? '#ECEDEE' : '#000000' }]}>
+          Historique des Swipes
+        </ThemedText>
+        <ThemedText style={[styles.subtitle, { color: colorScheme === 'dark' ? '#999' : '#666' }]}>
           {filteredHistory.length} swipe{filteredHistory.length > 1 ? 's' : ''}
         </ThemedText>
       </View>
@@ -130,6 +153,9 @@ export default function HistoryScreen() {
         <Pressable
           style={[
             styles.filterButton,
+            {
+              backgroundColor: filter === 'all' ? (colorScheme === 'dark' ? 'rgba(100, 150, 255, 0.3)' : 'rgba(100, 150, 255, 0.15)') : (colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)'),
+            },
             filter === 'all' && styles.filterButtonActive,
           ]}
           onPress={() => setFilter('all')}
@@ -137,6 +163,9 @@ export default function HistoryScreen() {
           <ThemedText
             style={[
               styles.filterText,
+              {
+                color: filter === 'all' ? '#0a7ea4' : (colorScheme === 'dark' ? '#ccc' : '#000000'),
+              },
               filter === 'all' && styles.filterTextActive,
             ]}
           >
@@ -147,6 +176,9 @@ export default function HistoryScreen() {
         <Pressable
           style={[
             styles.filterButton,
+            {
+              backgroundColor: filter === 'like' ? (colorScheme === 'dark' ? 'rgba(100, 150, 255, 0.3)' : 'rgba(100, 150, 255, 0.15)') : (colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)'),
+            },
             filter === 'like' && styles.filterButtonActive,
           ]}
           onPress={() => setFilter('like')}
@@ -154,16 +186,22 @@ export default function HistoryScreen() {
           <ThemedText
             style={[
               styles.filterText,
+              {
+                color: filter === 'like' ? '#0a7ea4' : (colorScheme === 'dark' ? '#ccc' : '#000000'),
+              },
               filter === 'like' && styles.filterTextActive,
             ]}
           >
-            ❤️ Aimés
+            ✓ Aimés
           </ThemedText>
         </Pressable>
 
         <Pressable
           style={[
             styles.filterButton,
+            {
+              backgroundColor: filter === 'reject' ? (colorScheme === 'dark' ? 'rgba(100, 150, 255, 0.3)' : 'rgba(100, 150, 255, 0.15)') : (colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)'),
+            },
             filter === 'reject' && styles.filterButtonActive,
           ]}
           onPress={() => setFilter('reject')}
@@ -171,6 +209,9 @@ export default function HistoryScreen() {
           <ThemedText
             style={[
               styles.filterText,
+              {
+                color: filter === 'reject' ? '#0a7ea4' : (colorScheme === 'dark' ? '#ccc' : '#000000'),
+              },
               filter === 'reject' && styles.filterTextActive,
             ]}
           >
@@ -212,23 +253,38 @@ function HistoryItem({
   const date = useFormatDate(item.created_at);
 
   const isLike = item.action === 'like';
-  const actionIcon = isLike ? '❤️' : '✕';
+  const actionIcon = isLike ? '✓' : '✕';
   const actionColor = isLike ? '#4CAF50' : '#F44336';
 
   return (
-    <View style={styles.historyItem}>
+    <View
+      style={[
+        styles.historyItem,
+        {
+          backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)',
+        },
+      ]}
+    >
       <View style={[styles.actionBadge, { backgroundColor: actionColor }]}>
         <ThemedText style={styles.actionIcon}>{actionIcon}</ThemedText>
       </View>
 
       <View style={styles.itemContent}>
-        <ThemedText style={styles.movieTitle} numberOfLines={2}>
+        <ThemedText
+          style={[
+            styles.movieTitle,
+            { color: colorScheme === 'dark' ? '#ECEDEE' : '#000000' },
+          ]}
+          numberOfLines={2}
+        >
           {item.movie_title}
         </ThemedText>
-        <ThemedText style={styles.itemDate}>{date}</ThemedText>
+        <ThemedText style={[styles.itemDate, { color: colorScheme === 'dark' ? '#999' : '#666' }]}>
+          {date}
+        </ThemedText>
       </View>
 
-      <ThemedText style={styles.action}>
+      <ThemedText style={[styles.action, { color: colorScheme === 'dark' ? '#999' : '#666' }]}>
         {isLike ? 'Aimé' : 'Rejeté'}
       </ThemedText>
     </View>
@@ -275,7 +331,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -302,7 +357,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 8,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     gap: 12,
   },
   actionBadge: {
