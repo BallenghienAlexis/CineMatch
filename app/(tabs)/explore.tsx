@@ -34,6 +34,7 @@ export default function ExploreScreen() {
   const moviesRef = useRef<Movie[]>([]);
   const currentIndexRef = useRef(0);
   const pageRef = useRef(1);
+  const hasLoadedRef = useRef(false); // Track if we've loaded movies
   const { user } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
 
@@ -71,10 +72,13 @@ export default function ExploreScreen() {
     }
   }, []);
 
-  // Charger les films au montage (une seule fois)
+  // Charger les films au montage (une seule fois, même après hot reload)
   useEffect(() => {
-    loadMovies(1);
-  }, []); // Dépendance vide = une seule execution
+    if (!hasLoadedRef.current && movies.length === 0) {
+      hasLoadedRef.current = true;
+      loadMovies(1);
+    }
+  }, []);
 
   // Charger plus de films quand la page change
   useEffect(() => {
