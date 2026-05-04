@@ -11,15 +11,30 @@ export const authService = {
       if (error) throw error;
 
       // Créer le profil immédiatement après signup
+      // Note: Le trigger automatique devrait créer le profil,
+      // mais on essaie également depuis le client pour plus de fiabilité
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-          });
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+            });
 
-        if (profileError) console.error('Profile creation failed:', profileError);
+          if (profileError) {
+            console.error('Profile creation failed:', profileError);
+            // Si RLS empêche l'insertion, attendre que le trigger du serveur le fasse
+            if (profileError.code === '42501') {
+              console.info('RLS policy prevents direct insertion. Relying on server-side trigger.');
+            } else {
+              throw profileError;
+            }
+          }
+        } catch (profileError: any) {
+          console.error('Error during profile creation:', profileError);
+          // Ne pas bloquer l'authentification si le profil échoue
+        }
       }
 
       return { user: data.user, error: null };
@@ -73,4 +88,6 @@ export const authService = {
     }
   },
 };
+
+
 
