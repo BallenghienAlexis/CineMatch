@@ -13,7 +13,6 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      key={`tabs-${colorScheme}`}
       screenOptions={{
         tabBarActiveTintColor: isDark ? '#fff' : '#0a7ea4',
         tabBarInactiveTintColor: isDark ? '#888' : '#666',

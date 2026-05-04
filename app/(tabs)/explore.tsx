@@ -118,11 +118,25 @@ export default function ExploreScreen() {
       }
       setError(null);
 
+      // Récupérer l'historique des swipes pour filtrer les films déjà vus
+      let swipedMovieIds: Set<number> = new Set();
+      if (user?.id) {
+        try {
+          const { data: swipeHistory } = await databaseService.getSwipeHistory(user.id);
+          swipedMovieIds = new Set(swipeHistory?.map((s) => s.movie_id) || []);
+        } catch (err) {
+          console.error('Error fetching swipe history for filtering:', err);
+        }
+      }
+
       const result = selectedGenreId
         ? await tmdbService.getMoviesByGenre(selectedGenreId, pageNum)
         : await tmdbService.getPopularMovies(pageNum);
 
-      setMovies((prev) => [...prev, ...result.results]);
+      // Filtrer les films déjà swipés
+      const filteredMovies = result.results.filter((movie) => !swipedMovieIds.has(movie.id));
+
+      setMovies((prev) => [...prev, ...filteredMovies]);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des films');
     } finally {
@@ -130,7 +144,7 @@ export default function ExploreScreen() {
         setLoading(false);
       }
     }
-  }, [selectedGenreId]);
+  }, [selectedGenreId, user?.id]);
 
   // Restaurer la progression de l'utilisateur au montage
   useEffect(() => {
