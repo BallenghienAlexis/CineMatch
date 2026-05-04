@@ -6,6 +6,8 @@ import {
   PanResponderInstance,
   Animated,
   Dimensions,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -34,8 +36,16 @@ export default function ExploreScreen() {
   const currentIndexRef = useRef(0);
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   // Mettre à jour les refs quand les states changent
   useEffect(() => {
@@ -254,6 +264,14 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Logout button - top right */}
+      <TouchableOpacity
+        style={[styles.logoutButton, { backgroundColor: Colors[colorScheme].button }]}
+        onPress={handleLogout}
+      >
+        <ThemedText style={styles.logoutButtonText}>🚪</ThemedText>
+      </TouchableOpacity>
+
       {/* Fond progressif like (vert) */}
       <Animated.View
         style={[
@@ -353,6 +371,25 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(244, 67, 54, 0.4)',
     zIndex: 5,
+  },
+  logoutButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  logoutButtonText: {
+    fontSize: 20,
   },
 });
 
