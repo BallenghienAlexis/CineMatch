@@ -1,112 +1,193 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  PanResponder,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  PanResponderInstance,
+} from 'react-native';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
+import { MovieCard } from '@/src/components/MovieCard';
+import { tmdbService, Movie } from '@/src/services/tmdb';
+import { databaseService } from '@/src/services/database';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
+const SWIPE_THRESHOLD = 50;
+
+export default function ExploreScreen() {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const panResponderRef = useRef<PanResponderInstance | null>(null);
+  const { user } = useAuth();
+  const colorScheme = useColorScheme() ?? 'light';
+
+  useEffect(() => {
+    panResponderRef.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderRelease: (evt, gestureState) => {
+        const { dx } = gestureState;
+        if (dx > SWIPE_THRESHOLD) {
+          handleSwipe('like');
+        } else if (dx < -SWIPE_THRESHOLD) {
+          handleSwipe('reject');
+        }
+      },
+    });
+  }, []);
+
+  useEffect(() => {
+    loadMovies();
+  }, []);
+
+  const loadMovies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await tmdbService.getPopularMovies(page);
+      setMovies((prev) => [...prev, ...result.results]);
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des films');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSwipe = async (action: 'like' | 'reject') => {
+    if (currentIndex >= movies.length) return;
+
+    const movie = movies[currentIndex];
+
+    if (user?.id) {
+      try {
+        await databaseService.addSwipeHistory(
+          user.id,
+          movie.id,
+          movie.title,
+          action
+        );
+      } catch (err) {
+        console.error('Error saving swipe:', err);
+      }
+    }
+
+    const nextIndex = currentIndex + 1;
+    setCurrentIndex(nextIndex);
+
+    if (nextIndex >= movies.length - 5) {
+      setPage((prev) => prev + 1);
+      loadMovies();
+    }
+  };
+
+  if (loading && movies.length === 0) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={Colors[colorScheme].button} />
+        <ThemedText style={{ marginTop: 12 }}>Chargement des films...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (error) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ThemedText style={{ color: 'red', textAlign: 'center' }}>
+          Erreur: {error}
         </ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+    );
+  }
+
+  if (movies.length === 0 || currentIndex >= movies.length) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ThemedText style={{ textAlign: 'center', fontSize: 18 }}>
+          Aucun film disponible pour le moment 🎬
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
+      </ThemedView>
+    );
+  }
+
+  const currentMovie = movies[currentIndex];
+
+  return (
+    <ThemedView style={styles.container}>
+      <View style={styles.header}>
+        <ThemedText type="title">Découvrir</ThemedText>
+        <ThemedText style={{ fontSize: 12, opacity: 0.7 }}>
+          {currentIndex + 1} / {movies.length}
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
+      </View>
+
+      <View
+        style={styles.gestureContainer}
+        {...panResponderRef.current?.panHandlers}
+      >
+        <MovieCard movie={currentMovie} showOverlay={true} />
+      </View>
+
+      <View style={styles.instructions}>
+        <ThemedText style={{ fontSize: 12, textAlign: 'center', opacity: 0.6 }}>
+          ← Glisser à gauche pour rejeter | Glisser à droite pour aimer →
         </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      </View>
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statBadge}>
+          <ThemedText style={{ fontSize: 12 }}>❌ Rejeter</ThemedText>
+        </View>
+        <View style={styles.statBadge}>
+          <ThemedText style={{ fontSize: 12 }}>❤️ Aimer</ThemedText>
+        </View>
+      </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    padding: 16,
+    gap: 16,
   },
-  titleContainer: {
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  header: {
+    marginTop: 8,
+    gap: 4,
+  },
+  gestureContainer: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  instructions: {
+    paddingVertical: 8,
+  },
+  statsContainer: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-around',
+    paddingBottom: 16,
+  },
+  statBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
 });
+
+
