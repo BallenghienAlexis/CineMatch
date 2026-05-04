@@ -4,10 +4,18 @@ import {
   StyleSheet,
   ActivityIndicator,
   PanResponderInstance,
-  Animated,
   Dimensions,
   TouchableOpacity,
+  View,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  interpolate,
+  Extrapolate,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +43,8 @@ export default function ExploreScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const panResponderRef = useRef<PanResponderInstance | null>(null);
-  const pan = useRef(new Animated.ValueXY()).current;
+  const panX = useSharedValue(0);
+  const panY = useSharedValue(0);
   const moviesRef = useRef<Movie[]>([]);
   const currentIndexRef = useRef(0);
   const pageRef = useRef(1);
@@ -204,12 +213,6 @@ export default function ExploreScreen() {
     }, [user?.id, movies])
   );
 
-  // Calculer l'angle de rotation en fonction du swipe (en degrés)
-  const rotationValue = pan.x.interpolate({
-    inputRange: [-screenWidth / 2, 0, screenWidth / 2],
-    outputRange: ['-15deg', '0deg', '15deg'],
-  });
-
   const animateSwipe = useCallback(async (dx: number, action: 'like' | 'reject') => {
     const movie = moviesRef.current[currentIndexRef.current];
     if (!movie) return;
@@ -242,14 +245,16 @@ export default function ExploreScreen() {
       }
     }
 
-    // Animer vers la sortie
-    Animated.timing(pan, {
-      toValue: { x: dx > 0 ? screenWidth * 2 : -screenWidth * 2, y: 0 },
+    // Animer vers la sortie avec Reanimated
+    panX.value = withTiming(dx > 0 ? screenWidth * 2 : -screenWidth * 2, {
       duration: 300,
-      useNativeDriver: false,
-    }).start(() => {
+    });
+
+    // Après l'animation, passer au film suivant
+    setTimeout(() => {
       // Reset pour le film suivant
-      pan.setValue({ x: 0, y: 0 });
+      panX.value = 0;
+      panY.value = 0;
 
       const nextIndex = currentIndexRef.current + 1;
       setCurrentIndex(nextIndex);
@@ -267,39 +272,78 @@ export default function ExploreScreen() {
        setTimeout(() => {
          isAnimatingRef.current = false;
        }, 50);
-     });
-  }, [user?.id, pan]);
+    }, 300);
+  }, [user?.id, panX, panY]);
 
-   useEffect(() => {
-     panResponderRef.current = PanResponder.create({
-       onStartShouldSetPanResponder: () => true,
-       onMoveShouldSetPanResponder: (evt, { dx }) => {
-         return Math.abs(dx) > 5;
-       },
-       onPanResponderMove: (evt, { dx }) => {
-         pan.x.setValue(dx);
-       },
-       onPanResponderRelease: (evt, gestureState) => {
-         const { dx, vx } = gestureState;
+    useEffect(() => {
+      panResponderRef.current = PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (evt, { dx }) => {
+          return Math.abs(dx) > 5;
+        },
+        onPanResponderMove: (evt, { dx }) => {
+          panX.value = dx;
+        },
+        onPanResponderRelease: (evt, gestureState) => {
+          const { dx, vx } = gestureState;
 
-         if (dx > SWIPE_THRESHOLD || vx > 0.5) {
-           animateSwipe(dx, 'like');
-         } else if (dx < -SWIPE_THRESHOLD || vx < -0.5) {
-           animateSwipe(dx, 'reject');
-         } else if (Math.abs(dx) < 5 && Math.abs(vx) < 0.1) {
-           // Simple tap - ouvrir le détail
-           handleMoviePress();
-         } else {
-           // Retour à la position normale
-           Animated.spring(pan, {
-             toValue: { x: 0, y: 0 },
-             useNativeDriver: false,
-           }).start();
-         }
-       },
-     });
-   }, [animateSwipe, handleMoviePress]);
+          if (dx > SWIPE_THRESHOLD || vx > 0.5) {
+            animateSwipe(dx, 'like');
+          } else if (dx < -SWIPE_THRESHOLD || vx < -0.5) {
+            animateSwipe(dx, 'reject');
+          } else if (Math.abs(dx) < 5 && Math.abs(vx) < 0.1) {
+            // Simple tap - ouvrir le détail
+            handleMoviePress();
+          } else {
+            // Retour à la position normale avec spring
+            panX.value = withSpring(0, {
+              damping: 10,
+              mass: 1,
+              stiffness: 100,
+            });
+            panY.value = withSpring(0, {
+              damping: 10,
+              mass: 1,
+              stiffness: 100,
+            });
+          }
+        },
+      });
+    }, [animateSwipe, handleMoviePress, panX, panY]);
 
+  // Créer tous les animated styles AVANT toute condition de rendu
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: panX.value },
+      { translateY: panY.value },
+      {
+        rotateZ: `${interpolate(
+          panX.value,
+          [-screenWidth / 2, 0, screenWidth / 2],
+          [-15, 0, 15],
+          Extrapolate.CLAMP
+        )}deg`,
+      },
+    ],
+  }));
+
+  const likeOpacity = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      panX.value,
+      [0, SWIPE_THRESHOLD, screenWidth / 2],
+      [0, 0.3, 0.7],
+      Extrapolate.CLAMP
+    ),
+  }));
+
+  const rejectOpacity = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      panX.value,
+      [-screenWidth / 2, -SWIPE_THRESHOLD, 0],
+      [0.7, 0.3, 0],
+      Extrapolate.CLAMP
+    ),
+  }));
 
   if (loading && movies.length === 0) {
     return (
@@ -379,12 +423,7 @@ export default function ExploreScreen() {
       <Animated.View
         style={[
           styles.feedbackBackgroundLike,
-          {
-            opacity: pan.x.interpolate({
-              inputRange: [0, SWIPE_THRESHOLD, screenWidth / 2],
-              outputRange: [0, 0.3, 0.7],
-            }),
-          },
+          likeOpacity,
         ]}
         pointerEvents="none"
       />
@@ -393,12 +432,7 @@ export default function ExploreScreen() {
       <Animated.View
         style={[
           styles.feedbackBackgroundReject,
-          {
-            opacity: pan.x.interpolate({
-              inputRange: [-screenWidth / 2, -SWIPE_THRESHOLD, 0],
-              outputRange: [0.7, 0.3, 0],
-            }),
-          },
+          rejectOpacity,
         ]}
         pointerEvents="none"
       />
@@ -407,13 +441,7 @@ export default function ExploreScreen() {
       <Animated.View
         style={[
           styles.cardContainer,
-          {
-            transform: [
-              { translateX: pan.x },
-              { translateY: pan.y },
-              { rotateZ: rotationValue },
-            ],
-          },
+          cardAnimatedStyle,
         ]}
         {...panResponderRef.current?.panHandlers}
       >
