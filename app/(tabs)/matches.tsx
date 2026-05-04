@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
@@ -71,15 +72,36 @@ export default function MatchesScreen() {
     );
   }
 
+  // État vide avec pull-to-refresh activé
   if (likedMovies.length === 0) {
     return (
-      <ThemedView style={styles.centerContainer}>
-        <ThemedText style={{ textAlign: 'center', fontSize: 18 }}>
-          Aucun film aimé pour le moment ❤️
-        </ThemedText>
-        <ThemedText style={{ textAlign: 'center', marginTop: 8, fontSize: 14, opacity: 0.6 }}>
-          Allez dans l'onglet Découvrir et swipez des films!
-        </ThemedText>
+      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <ThemedText style={styles.title}>Mes Films Aimés</ThemedText>
+          <ThemedText style={styles.subtitle}>0 film</ThemedText>
+        </View>
+
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors[colorScheme].tint}
+            />
+          }
+          contentContainerStyle={[
+            styles.emptyContainer,
+            { paddingBottom: insets.bottom + 16 },
+          ]}
+          scrollEnabled={false}
+        >
+          <ThemedText style={{ textAlign: 'center', fontSize: 18 }}>
+            Aucun film aimé pour le moment ❤️
+          </ThemedText>
+          <ThemedText style={{ textAlign: 'center', marginTop: 8, fontSize: 14, opacity: 0.6 }}>
+            Allez dans l'onglet Découvrir et swipez des films!
+          </ThemedText>
+        </ScrollView>
       </ThemedView>
     );
   }
@@ -157,6 +179,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
