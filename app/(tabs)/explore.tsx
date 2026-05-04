@@ -95,12 +95,23 @@ export default function ExploreScreen() {
 
     if (user?.id) {
       try {
+        // Enregistrer dans swipe_history
         await databaseService.addSwipeHistory(
           user.id,
           movie.id,
           movie.title,
           action
         );
+
+        // Si c'est un "like", ajouter aussi à liked_movies
+        if (action === 'like') {
+          await databaseService.addLikedMovie(
+            user.id,
+            movie.id,
+            movie.title,
+            movie.vote_average
+          );
+        }
       } catch (err) {
         console.error('Error saving swipe:', err);
       }
@@ -191,12 +202,6 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Indicateur de pagination en haut */}
-      <View style={styles.counter}>
-        <ThemedText style={styles.counterText}>
-          {currentIndex + 1} / {movies.length} {isLoadingMore ? '⬇️ Chargement...' : ''}
-        </ThemedText>
-      </View>
       {/* Fond progressif like (vert) */}
       <Animated.View
         style={[
