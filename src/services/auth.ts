@@ -1,22 +1,6 @@
 import { supabase } from './supabase';
 
 export const authService = {
-  createProfile: async (userId: string, email: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: email,
-        });
-
-      if (error) throw error;
-      return { error: null };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-
   signup: async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -26,8 +10,17 @@ export const authService = {
 
       if (error) throw error;
 
-      // Ne pas créer le profile ici - attendre confirmation email
-      // Le profile sera créé après vérification dans VerifyEmailScreen
+      // Créer le profil immédiatement après signup
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+          });
+
+        if (profileError) console.error('Profile creation failed:', profileError);
+      }
 
       return { user: data.user, error: null };
     } catch (error: any) {

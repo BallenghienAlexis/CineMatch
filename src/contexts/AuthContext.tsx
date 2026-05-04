@@ -28,7 +28,6 @@ export function AuthProvider(props: any) {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isEmailVerified, setIsEmailVerified] = React.useState(false);
   const router = useRouter();
   const segments = useSegments();
 
@@ -37,15 +36,6 @@ export function AuthProvider(props: any) {
       setSession(session);
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-
-      // Vérifier si l'email est confirmé
-      if (currentUser) {
-        const emailVerified = currentUser.user_metadata?.email_verified ?? false;
-        setIsEmailVerified(emailVerified);
-      } else {
-        setIsEmailVerified(false);
-      }
-
       setIsLoading(false);
     });
 
@@ -58,26 +48,21 @@ export function AuthProvider(props: any) {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === 'auth';
-    const inVerifyGroup = segments[1] === 'verify-email';
 
-    // Si utilisateur a email non vérifié, rediriger vers vérification
-    if (user && !isEmailVerified && !inVerifyGroup) {
-      router.replace('/auth/verify-email');
-    } else if (user && isEmailVerified && inAuthGroup) {
-      // Si email vérifié et connecté, rediriger vers app
+    if (session && inAuthGroup) {
+      // Si connecté et dans auth, rediriger vers app
       router.replace('/(tabs)');
-    } else if (!user && !inAuthGroup) {
-      // Si pas connecté, rediriger vers login
+    } else if (!session && !inAuthGroup) {
+      // Si pas connecté et pas dans auth, rediriger vers login
       router.replace('/auth/login');
     }
-  }, [user, isEmailVerified, isLoading, segments]);
+  }, [session, isLoading, segments]);
 
   async function signUp(email: string, password: string) {
     try {
       const { user: newUser, error } = await authService.signup(email, password);
       if (error) throw new Error(error);
       setUser(newUser);
-      setIsEmailVerified(false);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -88,11 +73,6 @@ export function AuthProvider(props: any) {
       const { user: loggedInUser, error } = await authService.login(email, password);
       if (error) throw new Error(error);
       setUser(loggedInUser);
-      // Vérifier l'état de vérification email
-      if (loggedInUser) {
-        const emailVerified = loggedInUser.user_metadata?.email_verified ?? false;
-        setIsEmailVerified(emailVerified);
-      }
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -104,7 +84,6 @@ export function AuthProvider(props: any) {
       if (error) throw new Error(error);
       setUser(null);
       setSession(null);
-      setIsEmailVerified(false);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -119,7 +98,7 @@ export function AuthProvider(props: any) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isEmailVerified, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signOut }}>
       {props.children}
     </AuthContext.Provider>
   );
