@@ -558,6 +558,81 @@ Login Flow:
 **Branch**: `feature/remove-email-verification`
 **Status**: Ready to merge into master
 
+## Session 5 — 2026-05-04
+### Feature: Swipe Gesture & MovieCard Layout Fixes
+
+**Objective**: Fix swipe functionality and improve MovieCard layout for better movie poster visibility.
+
+**Problems Fixed**:
+1. **Swipe Not Progressing to Next Film**: PanResponder captured stale `movies` and `currentIndex` via closures. Used refs to access current state.
+2. **Movie Posters Cut Off**: Poster was only 75% height, cutting top/bottom. Increased to 85% to show full poster.
+3. **Card Positioning**: Card now centered on screen (was at bottom).
+
+**Files Modified**:
+
+1. **`app/(tabs)/explore.tsx`** (Major refactor)
+   - Added `moviesRef` and `currentIndexRef` to maintain current state in callbacks
+   - `useEffect` syncs state → refs (so closures always see latest values)
+   - Moved `animateSwipe()` to use `useCallback` with refs
+   - Moved `loadMovies()` inside useCallback (before it was recreated every render)
+   - Fixed `useEffect` dependency array: `[page, loadMovies]` (don't need to re-run on loadMovies change)
+   - PanResponder now uses refs to check actual movie data
+   - When swipe completes: `setCurrentIndex(nextIndex)` + automatic pagination if needed
+   - Result: ✅ Swipe now correctly advances to next movie
+
+2. **`src/components/MovieCard.tsx`** (Layout improvements)
+   - Poster: `flex: 0.75` → `flex: 0.85` (85% of card height)
+   - Info section: `flex: 0.25` → `flex: 0.15` (15% of card height)
+   - Result: ✅ Much more poster visible, less cut off at top/bottom
+
+3. **`app/(tabs)/explore.tsx`** (Styling)
+   - Container: `justifyContent: 'flex-end'` + `paddingBottom: 40` → `justifyContent: 'center'`
+   - Card centered on screen now (was at bottom)
+   - Card dimension: `height: screenWidth * 1.5` (was 1.3)
+   - Result: ✅ Card larger and centered
+
+**Key Technical Decisions**:
+1. **Refs for State Access**: PanResponder handlers are not recreated, so they need refs to access latest values
+2. **useCallback Memoization**: Prevents infinite effect loops while keeping closures fresh
+3. **Poster-to-Info Ratio**: 85/15 split matches standard film poster aspect with minimal metadata
+
+**How Swipe Works Now**:
+```
+User swipes right/left
+  ↓
+PanResponder.onPanResponderRelease called
+  ↓
+Uses moviesRef.current & currentIndexRef.current to get actual current state
+  ↓
+animateSwipe() runs:
+  - Saves swipe to database
+  - Animates card out
+  - Calls setCurrentIndex(nextIndex)
+  - Refs update in useEffect
+  ↓
+Component re-renders with new movie
+```
+
+**Testing Checklist**:
+- [x] Swipe right (like) → next movie appears
+- [x] Swipe left (reject) → next movie appears
+- [x] Multiple swipes work correctly (not stuck on same movie)
+- [x] Poster visible (not cut off)
+- [x] Card centered on screen
+- [x] Auto-pagination works (loads more when needed)
+
+**Commits Made** (2 commits):
+1. `fix(swipe): fix mov state closure issue by using refs for currentIndex and movies`
+2. `fix(MovieCard): increase poster height to 85% for better visibility`
+
+**Next Steps**:
+1. Merge into feature/matches
+2. Create Matches screen to display liked movies
+3. Create History screen to show all swipes
+
+**Branch**: `feature/swipe-gestures`
+**Status**: Complete and tested
+
 
 ````
 

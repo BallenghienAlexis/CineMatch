@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   PanResponder,
   View,
@@ -29,51 +29,21 @@ export default function ExploreScreen() {
 
   const panResponderRef = useRef<PanResponderInstance | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
+  const moviesRef = useRef<Movie[]>([]);
+  const currentIndexRef = useRef(0);
   const { user } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
 
-  // Calculer l'angle de rotation en fonction du swipe
-  const rotation = pan.x.interpolate({
-    inputRange: [-screenWidth / 2, 0, screenWidth / 2],
-    outputRange: [-15, 0, 15],
-  });
-
-
+  // Mettre à jour les refs quand les states changent
+  useEffect(() => {
+    moviesRef.current = movies;
+  }, [movies]);
 
   useEffect(() => {
-    panResponderRef.current = PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        return Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10;
-      },
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x, dy: pan.y }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderTerminationRequest: () => true,
-      onPanResponderRelease: (evt, gestureState) => {
-        const { dx } = gestureState;
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
 
-        if (dx > SWIPE_THRESHOLD) {
-          animateSwipe(dx, 'like');
-        } else if (dx < -SWIPE_THRESHOLD) {
-          animateSwipe(dx, 'reject');
-        } else {
-          // Retour à la position normale
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-          }).start();
-        }
-      },
-    });
-  }, []);
-
-  useEffect(() => {
-    loadMovies();
-  }, []);
-
-  const loadMovies = async () => {
+  const loadMovies = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -84,10 +54,23 @@ export default function ExploreScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
-  const animateSwipe = async (dx: number, action: 'like' | 'reject') => {
-    const movie = movies[currentIndex];
+  // Charger les films au montage et quand la page change
+  useEffect(() => {
+    loadMovies();
+  }, [page, loadMovies]);
+
+  // Calculer l'angle de rotation en fonction du swipe (en degrés)
+  const rotationValue = pan.x.interpolate({
+    inputRange: [-screenWidth / 2, 0, screenWidth / 2],
+    outputRange: ['-15deg', '0deg', '15deg'],
+  });
+
+  const animateSwipe = useCallback(async (dx: number, action: 'like' | 'reject') => {
+    const movie = moviesRef.current[currentIndexRef.current];
+    if (!movie) return;
+
     if (user?.id) {
       try {
         await databaseService.addSwipeHistory(
@@ -103,22 +86,53 @@ export default function ExploreScreen() {
 
     // Animer vers la sortie
     Animated.timing(pan, {
-      toValue: { x: dx > 0 ? screenWidth * 1.5 : -screenWidth * 1.5, y: 0 },
+      toValue: { x: dx > 0 ? screenWidth * 2 : -screenWidth * 2, y: 0 },
       duration: 300,
       useNativeDriver: false,
     }).start(() => {
       // Reset pour le film suivant
       pan.setValue({ x: 0, y: 0 });
 
-      const nextIndex = currentIndex + 1;
+      const nextIndex = currentIndexRef.current + 1;
       setCurrentIndex(nextIndex);
 
-      if (nextIndex >= movies.length - 5) {
+      if (nextIndex >= moviesRef.current.length - 5) {
         setPage((prev) => prev + 1);
-        loadMovies();
       }
     });
-  };
+  }, [user?.id, pan]);
+
+  useEffect(() => {
+    panResponderRef.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, { dx, dy }) => {
+        return Math.abs(dx) > 5;
+      },
+      onPanResponderMove: (evt, { dx, dy }) => {
+        pan.x.setValue(dx);
+        pan.y.setValue(dy);
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        const { dx, vx } = gestureState;
+
+        if (dx > SWIPE_THRESHOLD || vx > 0.5) {
+          animateSwipe(dx, 'like');
+        } else if (dx < -SWIPE_THRESHOLD || vx < -0.5) {
+          animateSwipe(dx, 'reject');
+        } else {
+          // Retour à la position normale
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    });
+  }, [animateSwipe]);
+
+  useEffect(() => {
+    loadMovies();
+  }, [page, loadMovies]);
 
   if (loading && movies.length === 0) {
     return (
@@ -164,6 +178,7 @@ export default function ExploreScreen() {
             }),
           },
         ]}
+        pointerEvents="none"
       />
 
       {/* Fond progressif reject (rouge) */}
@@ -177,17 +192,18 @@ export default function ExploreScreen() {
             }),
           },
         ]}
+        pointerEvents="none"
       />
 
-      {/* Card avec rotation */}
+      {/* Card avec gestes */}
       <Animated.View
         style={[
-          styles.gestureContainer,
+          styles.cardContainer,
           {
             transform: [
               { translateX: pan.x },
               { translateY: pan.y },
-              { rotateZ: rotation },
+              { rotateZ: rotationValue },
             ],
           },
         ]}
@@ -203,6 +219,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   centerContainer: {
     flex: 1,
@@ -210,8 +228,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
   },
-  gestureContainer: {
-    flex: 1,
+  cardContainer: {
+    width: screenWidth * 0.9,
+    height: screenWidth * 1.5,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   feedbackBackgroundLike: {
@@ -220,7 +240,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(76, 175, 80, 0.5)',
+    backgroundColor: 'rgba(76, 175, 80, 0.4)',
     zIndex: 5,
   },
   feedbackBackgroundReject: {
@@ -229,7 +249,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(244, 67, 54, 0.5)',
+    backgroundColor: 'rgba(244, 67, 54, 0.4)',
     zIndex: 5,
   },
 });

@@ -2,8 +2,6 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Movie } from '@/src/services/tmdb';
 import { tmdbService } from '@/src/services/tmdb';
 import { useGetYear } from '@/src/hooks/useFormatting';
@@ -18,7 +16,6 @@ type MovieCardProps = {
  * Réutilisable pour explore, matches, search
  */
 export function MovieCard({ movie, showOverlay = true }: MovieCardProps) {
-  const colorScheme = useColorScheme() ?? 'light';
   const year = useGetYear(movie.release_date);
   const posterUrl = tmdbService.getPosterUrl(movie.poster_path);
   const rating = Math.round(movie.vote_average * 10) / 10;
@@ -34,38 +31,29 @@ export function MovieCard({ movie, showOverlay = true }: MovieCardProps) {
 
   return (
     <ThemedView style={styles.card}>
+      {/* AFFICHE EN TOP */}
       <Image
         source={{ uri: posterUrl }}
         style={styles.poster}
         resizeMode="cover"
       />
 
+      {/* ESPACE INFO EN BAS */}
       {showOverlay && (
-        <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.6)' }]}>
-          <View style={styles.infoContainer}>
-            {/* Titre */}
-            <ThemedText
-              style={[
-                styles.title,
-                { color: '#fff', fontWeight: 'bold' },
-              ]}
-              numberOfLines={2}
-            >
-              {movie.title}
-            </ThemedText>
+        <View style={styles.infoSection}>
+          {/* Titre */}
+          <ThemedText
+            style={[styles.title, { fontWeight: 'bold' }]}
+            numberOfLines={2}
+          >
+            {movie.title}
+          </ThemedText>
 
-            {/* Année et Note */}
-            <View style={styles.metaContainer}>
-              {year && (
-                <ThemedText style={[styles.meta, { color: '#ddd' }]}>
-                  {year}
-                </ThemedText>
-              )}
-              <View style={styles.ratingBadge}>
-                <ThemedText style={styles.ratingText}>
-                  ⭐ {rating}
-                </ThemedText>
-              </View>
+          {/* Année et Note */}
+          <View style={styles.metaContainer}>
+            {year && <ThemedText style={styles.meta}>{year}</ThemedText>}
+            <View style={styles.ratingBadge}>
+              <ThemedText style={styles.ratingText}>⭐ {rating}</ThemedText>
             </View>
           </View>
         </View>
@@ -77,32 +65,33 @@ export function MovieCard({ movie, showOverlay = true }: MovieCardProps) {
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    aspectRatio: 2 / 3, // Ratio standart film
+    height: '100%',
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#ccc',
+    backgroundColor: '#1a1a1a',
+    flexDirection: 'column',
   },
   poster: {
-    flex: 1,
+    flex: 0.85,
     width: '100%',
-    height: '100%',
+    backgroundColor: '#ccc',
   },
   noImageContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
+  infoSection: {
+    flex: 0.15,
     padding: 12,
-  },
-  infoContainer: {
-    gap: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'flex-start',
+    gap: 6,
   },
   title: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#fff',
   },
   metaContainer: {
     flexDirection: 'row',
@@ -111,7 +100,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   meta: {
-    fontSize: 14,
+    fontSize: 12,
+    color: '#aaa',
   },
   ratingBadge: {
     paddingHorizontal: 8,
