@@ -5,7 +5,9 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { databaseService } from '@/src/services/database';
@@ -20,10 +22,12 @@ type FilterType = 'all' | 'like' | 'reject';
 export default function HistoryScreen() {
   const [history, setHistory] = useState<SwipeHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
   const { user } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadHistory();
@@ -45,6 +49,12 @@ export default function HistoryScreen() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadHistory();
+    setRefreshing(false);
+  };
+
   const getFilteredHistory = () => {
     if (filter === 'all') return history;
     return history.filter((item) => item.action === filter);
@@ -52,7 +62,7 @@ export default function HistoryScreen() {
 
   const filteredHistory = getFilteredHistory();
 
-  if (loading) {
+  if (loading && history.length === 0) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Colors[colorScheme].button} />
@@ -85,7 +95,7 @@ export default function HistoryScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       {/* En-tête */}
       <View style={styles.header}>
         <ThemedText style={styles.title}>Historique des Swipes</ThemedText>
@@ -155,11 +165,21 @@ export default function HistoryScreen() {
         renderItem={({ item }) => (
           <HistoryItem item={item} colorScheme={colorScheme} />
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom + 16 },
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors[colorScheme].tint}
+          />
+        }
       />
-import { useFormatDate } from '@/src/hooks/useFormatting';
-
-// ... existing code ...
+    </ThemedView>
+  );
+}
 
 function HistoryItem({
   item,
@@ -200,7 +220,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 16,
   },
   title: {
@@ -247,7 +267,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
   },
   historyItem: {
     flexDirection: 'row',

@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   View,
   ActivityIndicator,
   FlatList,
+  RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { MovieCard } from '@/src/components/MovieCard';
+import { tmdbService } from '@/src/services/tmdb';
 import { databaseService } from '@/src/services/database';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
@@ -18,9 +20,11 @@ import { LikedMovie } from '@/src/services/supabase';
 export default function MatchesScreen() {
   const [likedMovies, setLikedMovies] = useState<LikedMovie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadLikedMovies();
@@ -42,7 +46,13 @@ export default function MatchesScreen() {
     }
   };
 
-  if (loading) {
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadLikedMovies();
+    setRefreshing(false);
+  };
+
+  if (loading && likedMovies.length === 0) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Colors[colorScheme].button} />
@@ -75,7 +85,7 @@ export default function MatchesScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       {/* En-tête */}
       <View style={styles.header}>
         <ThemedText style={styles.title}>Mes Films Aimés</ThemedText>
@@ -84,34 +94,50 @@ export default function MatchesScreen() {
         </ThemedText>
       </View>
 
-      {/* Liste des films */}
+      {/* Liste des films avec refresh */}
       <FlatList
         data={likedMovies}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
         renderItem={({ item }) => (
-          <View style={styles.movieContainer}>
-            <MovieCard
-              movie={{
-                id: item.movie_id,
-                title: item.movie_title,
-                poster_path: '',
-                release_date: '',
-                vote_average: item.movie_rating || 0,
-                overview: '',
-              }}
-              showOverlay={true}
-            />
-            <ThemedText style={styles.rating}>
-              ⭐ {item.movie_rating?.toFixed(1)}
-            </ThemedText>
-          </View>
+          <MovieItemCard movie={item} />
         )}
         scrollEnabled={true}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom + 16 },
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors[colorScheme].tint}
+          />
+        }
       />
     </ThemedView>
+  );
+}
+
+function MovieItemCard({ movie }: { movie: LikedMovie }) {
+  return (
+    <View style={styles.movieContainer}>
+      <MovieCard
+        movie={{
+          id: movie.movie_id,
+          title: movie.movie_title,
+          poster_path: `/w342/film-placeholder.jpg`, // TMDB placeholder
+          release_date: '',
+          vote_average: movie.movie_rating || 0,
+          overview: '',
+        }}
+        showOverlay={true}
+      />
+      <ThemedText style={styles.rating}>
+        ⭐ {movie.movie_rating?.toFixed(1)}
+      </ThemedText>
+    </View>
   );
 }
 
@@ -121,7 +147,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 8,
   },
   title: {
@@ -141,7 +167,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 8,
-    paddingBottom: 16,
   },
   row: {
     justifyContent: 'space-around',
