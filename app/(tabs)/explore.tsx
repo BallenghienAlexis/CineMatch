@@ -7,8 +7,9 @@ import {
   Animated,
   Dimensions,
   TouchableOpacity,
-  View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { MovieCard } from '@/src/components/MovieCard';
@@ -38,6 +39,7 @@ export default function ExploreScreen() {
   const hasLoadedRef = useRef(false); // Track if we've loaded movies
   const { user, signOut } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
+  const insets = useSafeAreaInsets();
 
   const handleLogout = async () => {
     try {
@@ -264,12 +266,19 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Logout button - top right */}
+      {/* Logout button - top right with safe area */}
       <TouchableOpacity
-        style={[styles.logoutButton, { backgroundColor: Colors[colorScheme].button }]}
+        style={[
+          styles.logoutButton,
+          {
+            top: insets.top + 12,
+            right: 12,
+            backgroundColor: '#FF3B30',
+          },
+        ]}
         onPress={handleLogout}
       >
-        <ThemedText style={styles.logoutButtonText}>🚪</ThemedText>
+        <Ionicons name="power" size={24} color="#fff" />
       </TouchableOpacity>
 
       {/* Fond progressif like (vert) */}
@@ -374,8 +383,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    right: 12,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -387,9 +395,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  logoutButtonText: {
-    fontSize: 20,
   },
 });
 
