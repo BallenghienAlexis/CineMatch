@@ -1,5 +1,5 @@
-import React, { useCallback, useRef } from 'react';
-import { ActivityIndicator } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import {ActivityIndicator, RefreshControl, ScrollView} from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
@@ -43,15 +43,32 @@ export default function ExploreScreen() {
     setCurrentIndex,
     loading,
     error,
-    page,
     setPage,
     moviesRef,
     currentIndexRef,
     pageRef,
+    loadMovies,
   } = useMovieStack({
     userId: user?.id,
     selectedGenreId,
   });
+
+  // Refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  /**
+   * Handle pull to refresh
+   */
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await loadMovies(1);
+    } catch (err) {
+      console.error('Error refreshing movies:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [loadMovies]);
 
   // Track animation state
   const isAnimatingRef = useRef(false);
@@ -158,7 +175,7 @@ export default function ExploreScreen() {
       };
 
       checkAndSkipIfSwiped();
-    }, [user?.id, movies, moviesRef, currentIndexRef, setCurrentIndex, setPage])
+    }, [user?.id, movies, moviesRef, currentIndexRef, pageRef, setCurrentIndex, setPage])
   );
 
   /**
