@@ -42,7 +42,8 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
    */
   useEffect(() => {
     if (genresListRef.current && genres.length > 0) {
-      const timeoutId = setTimeout(() => {
+      // Use requestAnimationFrame to ensure FlatList is rendered
+      const frameId = requestAnimationFrame(() => {
         try {
           // "Tous" is always at index 0
           let targetIndex = 0;
@@ -62,9 +63,9 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
         } catch (error) {
           console.warn('ScrollToIndex error:', error);
         }
-      }, 50); // Reduced timeout for faster response
+      });
 
-      return () => clearTimeout(timeoutId);
+      return () => cancelAnimationFrame(frameId);
     }
   }, [selectedGenreId, genres]);
 
