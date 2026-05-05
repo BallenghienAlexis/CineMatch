@@ -32,7 +32,11 @@ export default function ExploreScreen() {
   const { user, signOut } = useAuth();
   const { toggleTheme } = useThemeToggle();
 
-  // Extract movie stack logic
+  // Extract genre filter logic
+  const { genres, selectedGenreId, setSelectedGenreId, genresLoading, genresListRef } =
+    useGenreFilter();
+
+  // Extract movie stack logic (depends on selectedGenreId)
   const {
     movies,
     currentIndex,
@@ -46,12 +50,8 @@ export default function ExploreScreen() {
     pageRef,
   } = useMovieStack({
     userId: user?.id,
-    selectedGenreId: null,
+    selectedGenreId,
   });
-
-  // Extract genre filter logic
-  const { genres, selectedGenreId, setSelectedGenreId, genresLoading, genresListRef } =
-    useGenreFilter();
 
   // Track animation state
   const isAnimatingRef = useRef(false);
