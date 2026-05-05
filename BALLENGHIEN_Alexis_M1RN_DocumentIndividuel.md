@@ -171,5 +171,5 @@ Show: poster (75%), title, rating. Similar to MovieCard but optimized."
 **Document rédigé par** : Alexis Ballenghien  
 **Date** : 5 mai 2026  
 **Projet** : CineMatch — Application de swipe films React Native / Expo  
-**Statut** : Solo, toutes fonctionnalités + 2 bonus complétées
+**Statut** : Solo, toutes fonctionnalités
 
