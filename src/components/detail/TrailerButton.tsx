@@ -2,12 +2,9 @@ import React from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
-import { tmdbService } from '@/src/services/tmdb';
+import { tmdbService, MovieDetail } from '@/src/services/tmdb';
 import { detailStyles as styles } from '@/src/styles/detail.styles';
 
-interface MovieDetail {
-  videos?: any;
-}
 
 interface TrailerButtonProps {
   movie: MovieDetail;

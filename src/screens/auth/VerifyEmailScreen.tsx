@@ -39,7 +39,7 @@ export default function VerifyEmailScreen() {
 
           if (!profileError) {
             // Redirection automatique via AuthContext
-            router.replace('/(tabs)');
+            router.replace('/(tabs)/explore');
           }
         }
       } catch (err) {
@@ -102,7 +102,7 @@ export default function VerifyEmailScreen() {
           </ThemedText>
 
           <ThemedText style={styles.instruction}>
-            Cliquez sur le lien de confirmation dans l&#39;email pour activer votre compte. L'application se mettra à jour automatiquement.
+            Cliquez sur le lien de confirmation dans l&#39;email pour activer votre compte. L&#39;application se mettra à jour automatiquement.
           </ThemedText>
 
           {error ? (
@@ -123,7 +123,7 @@ export default function VerifyEmailScreen() {
             <ActivityIndicator color="white" />
           ) : (
             <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>
-              Renvoyer l'email
+              Renvoyer l&#39;email
             </ThemedText>
           )}
         </TouchableOpacity>

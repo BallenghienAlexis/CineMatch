@@ -15,7 +15,7 @@ type MatchMovieCardProps = {
  * Design optimisé pour la grille avec zone d'info plus grande
  */
 export function MatchMovieCard({ movie, onPress }: MatchMovieCardProps) {
-  const posterUrl = tmdbService.getPosterUrl(movie.poster_path || undefined);
+  const posterUrl = tmdbService.getPosterUrl(movie.poster_path ?? null);
   const rating = Math.round((movie.movie_rating || 0) * 10) / 10;
 
   if (!posterUrl) {

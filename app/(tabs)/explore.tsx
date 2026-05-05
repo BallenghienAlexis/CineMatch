@@ -97,7 +97,7 @@ export default function ExploreScreen() {
 
       if (remainingMovies <= LOAD_MORE_BUFFER) {
         console.log(`⬇️ Chargement page ${pageRef.current + 1}...`);
-        setPage((prev) => prev + 1);
+        setPage(pageRef.current + 2);
       }
     },
     [user?.id, moviesRef, currentIndexRef, pageRef, setCurrentIndex, setPage]
@@ -149,7 +149,7 @@ export default function ExploreScreen() {
 
             const remainingMovies = moviesRef.current.length - nextIndex;
             if (remainingMovies <= LOAD_MORE_BUFFER) {
-              setPage((prev) => prev + 1);
+              setPage(pageRef.current + 2);
             }
           }
         } catch (err) {
