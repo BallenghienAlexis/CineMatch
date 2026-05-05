@@ -18,7 +18,7 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
   const [genresLoading, setGenresLoading] = useState(true);
   const genresListRef = useRef<FlatList>(null);
-  
+
   // Keep track of the target index to scroll to
   const scrollTargetRef = useRef<number>(0);
 
@@ -61,13 +61,35 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
     if (genresListRef.current && genres.length > 0) {
       const frameId = requestAnimationFrame(() => {
         try {
-          genresListRef.current?.scrollToIndex({
-            index: scrollTargetRef.current,
-            animated: false, // No animation to prevent jumping
-            viewPosition: 0.5,
+          const targetIndex = scrollTargetRef.current;
+
+          // Calculate offset manually for more reliable scrolling
+          // "Tous" is ~55px, other genres are ~70px, gap is 8px
+          let offset = 0;
+          const tousWidth = 55;
+          const genreWidth = 70;
+          const gapSize = 8;
+          const horizontalPadding = 12; // left padding from contentContainerStyle
+
+          if (targetIndex === 0) {
+            offset = 0;
+          } else {
+            // Start with "Tous" width + left padding
+            offset = tousWidth + horizontalPadding;
+            // Add all genres before target
+            for (let i = 1; i < targetIndex; i++) {
+              offset += genreWidth + gapSize;
+            }
+            // Approximately center on screen (rough estimate)
+            offset = Math.max(0, offset - 50);
+          }
+
+          genresListRef.current?.scrollToOffset({
+            offset,
+            animated: false,
           });
         } catch (error) {
-          console.warn('ScrollToIndex error:', error);
+          console.warn('ScrollToOffset error:', error);
         }
       });
 
