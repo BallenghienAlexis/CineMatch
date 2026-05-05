@@ -18,6 +18,9 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
   const [genresLoading, setGenresLoading] = useState(true);
   const genresListRef = useRef<FlatList>(null);
+  
+  // Keep track of the target index to scroll to
+  const scrollTargetRef = useRef<number>(0);
 
   /**
    * Load genres on mount
@@ -38,27 +41,30 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
   }, []);
 
   /**
-   * Auto-scroll genre list to selected genre
+   * Update target index when selectedGenreId changes
+   */
+  useEffect(() => {
+    let targetIndex = 0;
+    if (selectedGenreId !== null) {
+      const foundIndex = genres.findIndex((g) => g.id === selectedGenreId);
+      if (foundIndex !== -1) {
+        targetIndex = foundIndex + 1; // +1 because "Tous" is at start
+      }
+    }
+    scrollTargetRef.current = targetIndex;
+  }, [selectedGenreId, genres]);
+
+  /**
+   * Scroll to target on every render (keeps position persistent)
    */
   useEffect(() => {
     if (genresListRef.current && genres.length > 0) {
-      // Use requestAnimationFrame to ensure FlatList is rendered
       const frameId = requestAnimationFrame(() => {
         try {
-          // "Tous" is always at index 0
-          let targetIndex = 0;
-          if (selectedGenreId !== null) {
-            const foundIndex = genres.findIndex((g) => g.id === selectedGenreId);
-            if (foundIndex !== -1) {
-              targetIndex = foundIndex + 1; // +1 because "Tous" is at start
-            }
-          }
-
-          // Use scrollToIndex for more reliable scrolling
           genresListRef.current?.scrollToIndex({
-            index: targetIndex,
-            animated: true,
-            viewPosition: 0.5, // Center item on screen
+            index: scrollTargetRef.current,
+            animated: false, // No animation to prevent jumping
+            viewPosition: 0.5,
           });
         } catch (error) {
           console.warn('ScrollToIndex error:', error);
@@ -67,7 +73,7 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
 
       return () => cancelAnimationFrame(frameId);
     }
-  }, [selectedGenreId, genres]);
+  }); // Empty dependency - scroll on every render!
 
   return {
     genres,
