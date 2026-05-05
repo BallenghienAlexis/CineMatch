@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     lineHeight: 20,
     color: '#fff',
   },
