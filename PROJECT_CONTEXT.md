@@ -386,7 +386,7 @@ setCurrentIndex = swipeCount
 
 ## 🧪 ÉTAT DE DÉVELOPPEMENT
 
-### ✅ COMPLÉTÉ (Session 6)
+### ✅ COMPLÉTÉ (Session 7)
 - [x] Authentification Supabase (signup/login)
 - [x] Navigation Auth + Tab
 - [x] Écran Swipe (Discover) avec PanResponder
@@ -397,14 +397,23 @@ setCurrentIndex = swipeCount
 - [x] Dark/Light mode
 - [x] Français localization
 - [x] **Progress restoration on reload**
+- [x] **Écran Film Detail** (synopsis, genres, casting, trailer YouTube)
+  - File: `app/detail/[movieId].tsx` (704 lignes)
+  - User status tracking + Like/Reject buttons
+- [x] **Recherche avec debounce 500ms**
+  - File: `app/(tabs)/search.tsx` (338 lignes)
+  - Pagination, pull-to-refresh, 4 empty states
+- [x] **Filtres par genre (BONUS)**
+  - GenreContext + UI horizontal FlatList
+  - TMDB integration (getMoviesByGenre)
+- [x] **Animations Reanimated 3D (BONUS)**
+  - Rotation 3D (-15° to +15°)
+  - Spring bounce-back
+  - Opacity feedback (vert/rouge)
 
-### 🟡 EN COURS
-- [ ] Écran Film Detail (synopsis, casting, trailer)
-- [ ] Recherche (avec debounce)
-
-### 🎁 BONUS (Non prioritaire)
-- [ ] Filtres par genre
-- [ ] Animations Reanimated avancées
+### 🎁 BONUS IMPLÉMENTÉS
+- [x] Genre filters (TMDB + UI dropdown) — **+1 pt**
+- [x] Reanimated card animations (3D rotation + spring) — **+1 pt**
 
 ---
 
@@ -472,13 +481,17 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 
 ## 🔮 PROCHAINES PRIORITÉS
 
-1. **Film Detail Screen** - Synopsis, genres, casting, trailer YouTube
-2. **Search Screen** - Debounced search + pagination
-3. **Genre Filters** (Bonus) - Filter before exploring
-4. **Reanimated Animations** (Bonus) - Smooth card rotation on swipe
+1. ✅ ~~Film Detail Screen~~ — **COMPLÉTÉ** (704 lignes)
+2. ✅ ~~Search Screen~~ — **COMPLÉTÉ** (338 lignes)
+3. ✅ ~~Genre Filters (Bonus)~~ — **COMPLÉTÉ** (UI + TMDB)
+4. ✅ ~~Reanimated Animations (Bonus)~~ — **COMPLÉTÉ** (3D rotation)
+5. 🟡 **Document PDF solo** (1-2 pages) — **À FAIRE**
+   - Part A: Contribution + difficultés + solutions
+   - Part B: Exemples concrets IA + critique + réflexion
 
 ---
 
-**Mis à jour**: 4 mai 2026 | Session 6  
-**État**: En développement actif
+**Mis à jour**: 5 mai 2026 | Session 7  
+**État**: Presque terminé (features complétées, PDF à rédiger)  
+**Score estimé**: 18.5 / 20 pts
 
