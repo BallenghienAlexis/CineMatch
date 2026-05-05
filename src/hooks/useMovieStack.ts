@@ -77,6 +77,7 @@ export const useMovieStack = ({
         // If first load and no movies found after filtering, try next pages
         if (pageNum === 1 && filteredMovies.length === 0 && isFirstLoadRef.current) {
           console.log('⚠️ Page 1 empty after filtering, trying next pages...');
+          let foundMovies = false;
           for (let p = 2; p <= Math.min(5, result.total_pages || 5); p++) {
             try {
               const nextResult = selectedGenreId
@@ -91,11 +92,17 @@ export const useMovieStack = ({
                 console.log(`✅ Found ${nextFilteredMovies.length} movies on page ${p}`);
                 setMovies(nextFilteredMovies);
                 setPage(p);
+                foundMovies = true;
                 break;
               }
             } catch (err) {
               console.error(`Error loading page ${p}:`, err);
             }
+          }
+          // If still no movies found, set empty array to avoid being stuck
+          if (!foundMovies) {
+            console.log('❌ No movies found on any page after filtering');
+            setMovies([]);
           }
         } else {
           setMovies((prev) => (pageNum === 1 ? filteredMovies : [...prev, ...filteredMovies]));
@@ -193,6 +200,7 @@ export const useMovieStack = ({
      setMovies([]);
      setCurrentIndex(0);
      setPage(1);
+     setLoading(true);
      hasLoadedRef.current = false;
      isFirstLoadRef.current = true;
      loadMovies(1);
