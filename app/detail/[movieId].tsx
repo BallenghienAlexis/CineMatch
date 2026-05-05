@@ -26,25 +26,6 @@ import { UserStatusPanel } from '@/src/components/detail/UserStatusPanel';
 // Styles (Extracted to separate file - 190 lines)
 import { detailStyles as styles } from '@/src/styles/detail.styles';
 
-/**
- * ============================================
- * DETAIL SCREEN - REFACTORED VERSION
- * ============================================
- *
- * Original: 704 lines (monolithic)
- * Current: ~140 lines (orchestration only)
- *
- * Extracted:
- * - Custom Hook: useMovieDetail (93 lines, all logic)
- * - 7 Components: ~50-130 lines each (reusable UI)
- * - Styles: detail.styles.ts (190 lines, all StyleSheets)
- *
- * Benefits:
- * ✅ Better reusability (MovieGenres, TrailerButton shareable)
- * ✅ Easier testing (logic in hook, UI in components)
- * ✅ Better maintainability (each file ~100 lines max)
- * ✅ Performance: memoization ready
- */
 export default function DetailScreen() {
   // Get params from route
   const { movieId } = useLocalSearchParams<{ movieId: string }>();

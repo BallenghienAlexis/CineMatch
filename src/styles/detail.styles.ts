@@ -48,6 +48,7 @@ export const detailStyles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
+    lineHeight: 32,
     marginBottom: 8,
   },
   metaRow: {
