@@ -168,10 +168,8 @@ export const useMovieStack = ({
           const safeIndex = Math.min(targetIndex, allMovies.length - 1);
           setCurrentIndex(safeIndex);
 
-          console.log(`✅ Progression restored: ${safeIndex}/${allMovies.length} films`);
           setLoading(false);
         } catch (err: any) {
-          console.error('Error restoring progression:', err);
           loadMovies(1);
         }
       };

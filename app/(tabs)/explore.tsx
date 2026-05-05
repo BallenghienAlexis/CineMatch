@@ -110,10 +110,8 @@ export default function ExploreScreen() {
 
       // Load more if needed
       const remainingMovies = moviesRef.current.length - nextIndex;
-      console.log(`🎬 Films restants: ${remainingMovies}, prochain index: ${nextIndex}`);
 
       if (remainingMovies <= LOAD_MORE_BUFFER) {
-        console.log(`⬇️ Chargement page ${pageRef.current + 1}...`);
         setPage(pageRef.current + 2);
       }
     },
@@ -170,7 +168,7 @@ export default function ExploreScreen() {
             }
           }
         } catch (err) {
-          console.error('Error checking if movie was swiped:', err);
+          // Silent fail
         }
       };
 

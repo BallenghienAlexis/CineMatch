@@ -35,7 +35,7 @@ const ExpoSecureStorage = {
       }
       return SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.error('SecureStorage removeItem error:', error);
+      // Silent fail
     }
   },
 };
