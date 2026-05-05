@@ -196,10 +196,32 @@ export default function ExploreScreen() {
   // No movies state
   if (movies.length === 0 || currentIndex >= movies.length) {
     return (
-      <ThemedView style={styles.centerContainer}>
-        <ThemedText style={{ textAlign: 'center', fontSize: 18 }}>
-          Aucun film disponible pour le moment 🎬
-        </ThemedText>
+      <ThemedView style={styles.container}>
+        {/* Component 1: Action Buttons */}
+        <ActionButtons
+          topInset={insets.top}
+          colorScheme={colorScheme}
+          onToggleTheme={toggleTheme}
+          onLogout={handleLogout}
+        />
+
+        {/* Center message */}
+        <ThemedView style={styles.centerContainer}>
+          <ThemedText style={{ textAlign: 'center', fontSize: 18 }}>
+            Aucun film disponible pour le moment 🎬
+          </ThemedText>
+        </ThemedView>
+
+        {/* Component 3: Genre Filter (always visible) */}
+        {!genresLoading && genres.length > 0 && (
+          <GenreFilter
+            genres={genres}
+            selectedGenreId={selectedGenreId}
+            onSelectGenre={setSelectedGenreId}
+            genresListRef={genresListRef}
+            colorScheme={colorScheme}
+          />
+        )}
       </ThemedView>
     );
   }

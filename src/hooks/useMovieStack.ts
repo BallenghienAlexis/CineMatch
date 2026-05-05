@@ -40,6 +40,7 @@ export const useMovieStack = ({
   const currentIndexRef = useRef(0);
   const pageRef = useRef(1);
   const hasLoadedRef = useRef(false);
+  const isFirstLoadRef = useRef(true);
 
   /**
    * Load movies from TMDB, filtered by swipe history
@@ -73,7 +74,34 @@ export const useMovieStack = ({
           (movie) => !swipedMovieIds.has(movie.id)
         );
 
-        setMovies((prev) => [...prev, ...filteredMovies]);
+        // If first load and no movies found after filtering, try next pages
+        if (pageNum === 1 && filteredMovies.length === 0 && isFirstLoadRef.current) {
+          console.log('⚠️ Page 1 empty after filtering, trying next pages...');
+          for (let p = 2; p <= Math.min(5, result.total_pages || 5); p++) {
+            try {
+              const nextResult = selectedGenreId
+                ? await tmdbService.getMoviesByGenre(selectedGenreId, p)
+                : await tmdbService.getPopularMovies(p);
+
+              const nextFilteredMovies = nextResult.results.filter(
+                (movie) => !swipedMovieIds.has(movie.id)
+              );
+
+              if (nextFilteredMovies.length > 0) {
+                console.log(`✅ Found ${nextFilteredMovies.length} movies on page ${p}`);
+                setMovies(nextFilteredMovies);
+                setPage(p);
+                break;
+              }
+            } catch (err) {
+              console.error(`Error loading page ${p}:`, err);
+            }
+          }
+        } else {
+          setMovies((prev) => (pageNum === 1 ? filteredMovies : [...prev, ...filteredMovies]));
+        }
+
+        isFirstLoadRef.current = false;
       } catch (err: any) {
         setError(err.message || 'Erreur lors du chargement des films');
       } finally {
@@ -158,16 +186,17 @@ export const useMovieStack = ({
     }
   }, [page, loadMovies]);
 
-  /**
-   * Reset when genre changes
-   */
-  useEffect(() => {
-    setMovies([]);
-    setCurrentIndex(0);
-    setPage(1);
-    hasLoadedRef.current = false;
-    loadMovies(1);
-  }, [selectedGenreId, loadMovies]);
+   /**
+    * Reset when genre changes
+    */
+   useEffect(() => {
+     setMovies([]);
+     setCurrentIndex(0);
+     setPage(1);
+     hasLoadedRef.current = false;
+     isFirstLoadRef.current = true;
+     loadMovies(1);
+   }, [selectedGenreId, loadMovies]);
 
   /**
    * Update refs whenever states change
