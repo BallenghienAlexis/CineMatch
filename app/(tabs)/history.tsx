@@ -18,25 +18,6 @@ import { HistoryEmptyState } from '@/src/components/history/HistoryEmptyState';
 // Styles
 import { historyStyles as styles } from '@/src/styles/history.styles';
 
-/**
- * ============================================
- * HISTORY SCREEN - REFACTORED VERSION
- * ============================================
- *
- * Original: 393 lines (monolithic)
- * Current: ~120 lines (orchestration only)
- *
- * Extracted:
- * - Custom Hook: useSwipeHistoryFilter (85 lines, all logic + filtering)
- * - 4 Components: HistoryHeader, HistoryFilters, HistoryItem, HistoryEmptyState (~30-50 lines each)
- * - Styles: history.styles.ts (85 lines, all StyleSheets)
- *
- * Benefits:
- * ✅ Filter logic separated from component
- * ✅ Reusable filter mechanism
- * ✅ Clean composition of small components
- * ✅ Better maintainability
- */
 export default function HistoryScreen() {
   const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();

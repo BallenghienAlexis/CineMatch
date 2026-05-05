@@ -13,25 +13,6 @@ import { SearchResultsGrid } from '@/src/components/search/SearchResultsGrid';
 // Styles
 import { searchStyles as styles } from '@/src/styles/search.styles';
 
-/**
- * ============================================
- * SEARCH SCREEN - REFACTORED VERSION
- * ============================================
- *
- * Original: 338 lines (monolithic)
- * Current: ~80 lines (orchestration only)
- *
- * Extracted:
- * - Custom Hook: useMovieSearch (120 lines, all logic + debounce)
- * - 3 Components: SearchHeader, SearchEmptyStates, SearchResultsGrid (~60-80 lines each)
- * - Styles: search.styles.ts (67 lines, all StyleSheets)
- *
- * Benefits:
- * ✅ Clean logic separation (hook handles all state)
- * ✅ Reusable components (SearchHeader, SearchEmptyStates shareable)
- * ✅ Easier testing (each component has single responsibility)
- * ✅ Better maintainability (each file ~100 lines max)
- */
 export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
