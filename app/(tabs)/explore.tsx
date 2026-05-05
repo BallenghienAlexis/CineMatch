@@ -25,28 +25,6 @@ import { exploreStyles as styles } from '@/src/styles/explore.styles';
 
 const LOAD_MORE_BUFFER = 3;
 
-/**
- * ============================================
- * EXPLORE SCREEN - REFACTORED VERSION
- * ============================================
- *
- * Original: 701 lines (monolithic with Reanimated animations)
- * Current: ~180 lines (orchestration only)
- *
- * Extracted:
- * - Custom Hook 1: useMovieStack (150 lines, movie loading + progress restore)
- * - Custom Hook 2: useSwipeGestures (180 lines, Reanimated + PanResponder)
- * - Custom Hook 3: useGenreFilter (80 lines, genres + auto-scroll)
- * - 3 Components: SwipeCard, GenreFilter, ActionButtons (~30-50 lines each)
- * - Styles: explore.styles.ts (90 lines, all StyleSheets)
- *
- * Benefits:
- * ✅ Complex animations cleanly extracted
- * ✅ Gesture handling in dedicated hook
- * ✅ Progress restoration logic separate
- * ✅ Genre filtering self-contained
- * ✅ Each file ~100 lines max
- */
 export default function ExploreScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
