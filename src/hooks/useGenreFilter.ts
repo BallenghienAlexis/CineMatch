@@ -1,8 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { FlatList, Dimensions } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { FlatList } from 'react-native';
 import { tmdbService, Genre } from '@/src/services/tmdb';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 interface UseGenreFilterReturn {
   genres: Genre[];
@@ -55,22 +53,16 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
             }
           }
 
-          // Each item ~75px + 8px gap
-          const avgItemWidth = 75;
-          const gapSize = 8;
-          const itemSize = avgItemWidth + gapSize;
-
-          // Center the item on screen
-          const offset = Math.max(0, targetIndex * itemSize - screenWidth / 2 + avgItemWidth / 2);
-
-          genresListRef.current?.scrollToOffset({
-            offset,
+          // Use scrollToIndex for more reliable scrolling
+          genresListRef.current?.scrollToIndex({
+            index: targetIndex,
             animated: true,
+            viewPosition: 0.5, // Center item on screen
           });
         } catch (error) {
-          console.warn('ScrollToOffset error:', error);
+          console.warn('ScrollToIndex error:', error);
         }
-      }, 100);
+      }, 50); // Reduced timeout for faster response
 
       return () => clearTimeout(timeoutId);
     }
