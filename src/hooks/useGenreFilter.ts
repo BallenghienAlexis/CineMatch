@@ -7,7 +7,7 @@ interface UseGenreFilterReturn {
   selectedGenreId: number | null;
   setSelectedGenreId: (id: number | null) => void;
   genresLoading: boolean;
-  genresListRef: React.RefObject<FlatList>;
+  genresListRef: React.RefObject<FlatList<any> | null>;
 }
 
 /**

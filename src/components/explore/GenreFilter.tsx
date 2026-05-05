@@ -8,7 +8,7 @@ interface GenreFilterProps {
   genres: Genre[];
   selectedGenreId: number | null;
   onSelectGenre: (id: number | null) => void;
-  genresListRef: React.RefObject<FlatList>;
+  genresListRef: React.RefObject<FlatList<any> | null>;
   colorScheme: 'light' | 'dark';
 }
 

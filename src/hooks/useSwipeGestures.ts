@@ -6,15 +6,15 @@ import Animated, {
   withTiming,
   withSpring,
   interpolate,
-  Extrapolate,
+  Extrapolate, SharedValue,
 } from 'react-native-reanimated';
 
 const SWIPE_THRESHOLD = 100;
 const { width: screenWidth } = Dimensions.get('window');
 
 interface UseSwipeGesturesReturn {
-  panX: Animated.Shared<number>;
-  panY: Animated.Shared<number>;
+  panX: SharedValue<number>;
+  panY: SharedValue<number>;
   panResponder: PanResponderInstance | null;
   cardAnimatedStyle: any;
   likeOpacity: any;
