@@ -56,46 +56,34 @@ export const useGenreFilter = (): UseGenreFilterReturn => {
 
   /**
    * Scroll to target on every render (keeps position persistent)
+   * Use setTimeout with a delay to ensure FlatList is fully rendered
    */
   useEffect(() => {
     if (genresListRef.current && genres.length > 0) {
-      const frameId = requestAnimationFrame(() => {
+      const timeoutId = setTimeout(() => {
         try {
-          const targetIndex = scrollTargetRef.current;
-
-          // Calculate offset manually for more reliable scrolling
-          // "Tous" is ~55px, other genres are ~70px, gap is 8px
-          let offset = 0;
-          const tousWidth = 55;
-          const genreWidth = 70;
-          const gapSize = 8;
-          const horizontalPadding = 12; // left padding from contentContainerStyle
-
-          if (targetIndex === 0) {
-            offset = 0;
-          } else {
-            // Start with "Tous" width + left padding
-            offset = tousWidth + horizontalPadding;
-            // Add all genres before target
-            for (let i = 1; i < targetIndex; i++) {
-              offset += genreWidth + gapSize;
-            }
-            // Approximately center on screen (rough estimate)
-            offset = Math.max(0, offset - 50);
-          }
-
-          genresListRef.current?.scrollToOffset({
-            offset,
+          // Use scrollToIndex with viewPosition to center - it's more reliable
+          genresListRef.current?.scrollToIndex({
+            index: scrollTargetRef.current,
             animated: false,
+            viewPosition: 0.5, // Center on screen
           });
         } catch (error) {
-          console.warn('ScrollToOffset error:', error);
+          // Fallback: try without viewPosition
+          try {
+            genresListRef.current?.scrollToIndex({
+              index: scrollTargetRef.current,
+              animated: false,
+            });
+          } catch (err) {
+            console.warn('ScrollToIndex failed:', err);
+          }
         }
-      });
+      }, 100); // 100ms delay for better rendering
 
-      return () => cancelAnimationFrame(frameId);
+      return () => clearTimeout(timeoutId);
     }
-  }); // Empty dependency - scroll on every render!
+  }); // Empty dependency - scroll on every render
 
   return {
     genres,
