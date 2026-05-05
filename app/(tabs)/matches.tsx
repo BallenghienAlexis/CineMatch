@@ -15,24 +15,6 @@ import { MatchesGrid } from '@/src/components/matches/MatchesGrid';
 // Styles
 import { matchesStyles as styles } from '@/src/styles/matches.styles';
 
-/**
- * ============================================
- * MATCHES SCREEN - REFACTORED VERSION
- * ============================================
- *
- * Original: 247 lines (monolithic)
- * Current: ~90 lines (orchestration only)
- *
- * Extracted:
- * - Custom Hook: useLikedMovies (75 lines, all logic)
- * - 4 Components: MatchesHeader, MatchesEmptyState, MatchesGrid, MovieItemCard (~30-50 lines each)
- * - Styles: matches.styles.ts (50 lines, all StyleSheets)
- *
- * Benefits:
- * ✅ Clean separation of concerns
- * ✅ Reusable components
- * ✅ Easy to test and maintain
- */
 export default function MatchesScreen() {
   const colorScheme = useEffectiveColorScheme();
   const insets = useSafeAreaInsets();
