@@ -205,12 +205,25 @@ export default function ExploreScreen() {
           onLogout={handleLogout}
         />
 
-        {/* Center message */}
-        <ThemedView style={styles.centerContainer}>
-          <ThemedText style={{ textAlign: 'center', fontSize: 18 }}>
+        {/* Scrollable content with refresh */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.centerContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={Colors[colorScheme].tint}
+            />
+          }
+        >
+          <ThemedText style={{ textAlign: 'center', fontSize: 18, marginBottom: 12 }}>
             Aucun film disponible pour le moment 🎬
           </ThemedText>
-        </ThemedView>
+          <ThemedText style={{ textAlign: 'center', fontSize: 14, opacity: 0.7 }}>
+            Tirez vers le bas pour réessayer
+          </ThemedText>
+        </ScrollView>
 
         {/* Component 3: Genre Filter (always visible) */}
         {!genresLoading && genres.length > 0 && (
