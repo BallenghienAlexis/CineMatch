@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    lineHeight: 40,
+    lineHeight: 20,
     color: '#fff',
   },
   metaContainer: {
