@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   poster: {
-    flex: 0.75,
+    flex: 0.93,
     width: '100%',
     backgroundColor: '#ccc',
   },
@@ -88,37 +88,37 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   infoSection: {
-    flex: 0.25,
-    padding: 12,
+    flex: 0.07,
+    padding: 2,
+    paddingHorizontal: 6,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'flex-start',
-    gap: 6,
+    gap: 0,
   },
   title: {
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 14,
     color: '#fff',
   },
   metaContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
   meta: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#aaa',
   },
   ratingBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
     backgroundColor: 'rgba(255, 165, 0, 0.8)',
   },
   ratingText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
   },
 });
-
