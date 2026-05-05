@@ -301,7 +301,19 @@ button      : #0a7ea4
 
 ## 🧪 Tests et Déploiement
 
-### Tester localement
+### 🚀 Expo Go (RECOMMANDÉ — Test rapide)
+
+#### Méthode 1 : Scanner le QR code
+
+1. **Installer Expo Go** :
+   - [iOS](https://apps.apple.com/us/app/expo-go/id982107779)
+   - [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)
+
+2. **Scanner le QR code :**
+
+![img.png](img.png)
+
+#### Méthode 2 : Lancer via termineau
 
 ```bash
 # Dev
@@ -310,18 +322,9 @@ npm start
 
 # Lint
 npm run lint
-
-# Build Android APK (si EAS configuré)
-eas build -p android --local
 ```
 
-### Expo Go (Recommandé pour test rapide)
-
-1. Installer "Expo Go" sur votre téléphone
-2. Lancer `npm start`
-3. Scanner le QR code
-
-### Publication (APK/IPA)
+### 📦 Publication (APK/IPA)
 
 ```bash
 # Avec EAS CLI
