@@ -23,9 +23,12 @@ export const authService = {
             });
 
           if (profileError) {
-            console.error('Profile creation failed:', profileError);
-            // Si RLS empêche l'insertion, attendre que le trigger du serveur le fasse
-            if (profileError.code === '42501') {
+            // Ignore duplicate key errors (profile already exists from server trigger)
+            if (profileError.code === '23505') {
+              console.info('Profile already exists (created by server trigger).');
+            }
+            // If RLS prevents insertion, rely on server-side trigger
+            else if (profileError.code === '42501') {
               console.info('RLS policy prevents direct insertion. Relying on server-side trigger.');
             } else {
               throw profileError;
