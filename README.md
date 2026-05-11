@@ -22,7 +22,7 @@ Une application mobile **React Native / Expo** permettant à des groupes d'amis 
 
 ```bash
 # Cloner le repo
-git clone <URL_REPO>
+git clone https://github.com/BallenghienAlexis/BALLENGHIEN_Alexis_M1RN_CineMatch.git
 cd CineMatch
 
 # Installer les dépendances
@@ -296,41 +296,6 @@ button      : #0a7ea4
 ```
 
 **Composants thématisés** : `ThemedText`, `ThemedView` adaptent leur stylet automatiquement.
-
----
-
-## 🧪 Tests et Déploiement
-
-### 🚀 Expo Go (RECOMMANDÉ — Test rapide)
-
-#### Méthode 1 : Scanner le QR code
-
-1. **Installer Expo Go** :
-   - [iOS](https://apps.apple.com/us/app/expo-go/id982107779)
-   - [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)
-
-2. **Scanner le QR code :**
-
-![img.png](img.png)
-
-#### Méthode 2 : Lancer via termineau
-
-```bash
-# Dev
-npm start
-# i (iOS), a (Android), w (Web)
-
-# Lint
-npm run lint
-```
-
-### 📦 Publication (APK/IPA)
-
-```bash
-# Avec EAS CLI
-eas build -p android    # APK Android
-eas build -p ios        # IPA iOS
-```
 
 ---
 
