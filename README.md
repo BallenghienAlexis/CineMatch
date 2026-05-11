@@ -18,19 +18,18 @@ Une application mobile **React Native / Expo** permettant à des groupes d'amis 
 
 ## 🚀 Démarrage Rapide
 
-### 📱 Tester l'app en direct avec Expo Go
+### Lien Expo Go permanent pour tester l'app sans installation :
 
-**Lien permanent Expo** :
-```
-https://expo.dev/accounts/alexisballenghien/projects/CineMatch
-```
+IOS :
 
-**Comment tester** :
-1. Installer [Expo Go](https://expo.dev/client) (iOS ou Android)
-2. Ouvrir le lien ci-dessus dans Expo Go
-3. L'app se lance en 3-5 secondes ✅
+![img_3.png](IOS_Expo.png)
 
-### Installation locale
+Android :
+
+![img_2.png](Android_Expo.png)
+
+
+### Installation
 
 ```bash
 # Cloner le repo
