@@ -6,6 +6,14 @@ import { Platform } from 'react-native';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
+console.log('[Supabase] URL:', SUPABASE_URL ? 'Configured' : 'MISSING');
+console.log('[Supabase] Key:', SUPABASE_ANON_KEY ? 'Configured' : 'MISSING');
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('[Supabase] ❌ CRITICAL: Environment variables not set!');
+  console.error('[Supabase] Make sure .env.local is in project root with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');
+}
+
 const ExpoSecureStorage = {
   getItem: async (key: string) => {
     try {
