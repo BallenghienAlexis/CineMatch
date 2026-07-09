@@ -1,175 +1,106 @@
 # Document Individuel — Alexis Ballenghien
 
-## PARTIE A — MA CONTRIBUTION AU PROJET
+Projet: **CineMatch** (React Native / Expo, M1 DEV SUP de VINCI)  
 
-### Les écrans et fonctionnalités développés
+## Partie A — Ma contribution au projet
 
-En tant qu'étudiant travaillant en solo, j'ai développé **l'intégralité de l'application CineMatch**, du concept à la mise en production. Cela inclut :
+J'ai realise le projet en solo, donc j'ai developpe l'ensemble des ecrans et de la logique metier:
 
-**Navigation et authentification :**
-- Stack de navigation Expo Router avec authentification Supabase
-- Écrans de login/signup avec gestion de session sécurisée
-- Context AuthContext pour la persistance JWT
+- **Authentification (Supabase)**: inscription, connexion, deconnexion, gestion de session.
+- **Explore / Swipe**: affichage des films, swipe gauche/droite, persistence des choix.
+- **Matches**: liste des films likes, tri et rafraichissement.
+- **History**: historique des swipes (likes/rejets) avec filtres.
+- **Search**: recherche TMDB avec debounce (500 ms), pagination et etats vides.
+- **Detail film**: synopsis, genres, runtime, casting (top 5), lien bande-annonce.
+- **Bonus**: filtre par genre + animations Reanimated sur la carte (rotation/feedback).
 
-**Écrans principaux (3 onglets) :**
-- **Explore** : Écran de swipe avec gestures PanResponder, affichage film 1 par 1, gestion like/reject persistée
-- **Matches** : Grille des films aimés (2 colonnes), tri par note, pull-to-refresh
-- **History** : Historique des swipes avec filtres (Tous/Aimés/Rejetés), dates en français
+### Difficultes techniques rencontrees et resolutions
 
-**Fonctionnalités additionnelles :**
-- **Recherche** : Barre de recherche avec debounce 500ms, pagination, 4 empty states
-- **Détail film** : Synopsis, genres, casting (5 premiers acteurs), lien YouTube trailer
-- **Filtres par genre (Bonus)** : Dropdown horizontal, intégration TMDB getMoviesByGenre
-- **Animations Reanimated (Bonus)** : Rotation 3D (-15° à +15°), spring bounce-back, feedback opacity
+1. **Flux signup Supabase**  
+   Au depart, la verification email bloquait l'acces immediat a l'app.  
+   **Solution**: ajustement de la configuration Supabase pour garder un parcours de connexion coherent avec l'exercice, puis simplification du flux cote app.
 
-**Qualité technique :**
-- Structure src/ organisée (components/, hooks/, services/, contexts/)
-- 8 composants réutilisables (MovieCard, MatchMovieCard, SwipeCard, GenreFilter, etc.)
-- Services séparés : tmdb.ts, database.ts, auth.ts, supabase.ts
-- TypeScript strict, ESLint configuré
-- 20+ commits Git réguliers avec messages explicites
+2. **RLS et creation du profil utilisateur**  
+   Certains utilisateurs n'avaient pas de profil apres l'inscription, ce qui cassait les ecritures en base.  
+   **Solution**: creation de profil systematique apres signup et alignement des policies RLS avec les operations attendues.
 
-### Difficultés techniques rencontrées
+3. **Recherche trop couteuse sans debounce**  
+   Un appel API partait a chaque caractere.  
+   **Solution**: debounce a 500 ms + gestion claire des etats (chargement, vide, erreur, resultat).
 
-**1. Vérification d'email Supabase**
-- **Problème** : Supabase imposait une vérification d'email avant d'autoriser l'accès aux données. Cela bloquait le flux utilisateur après inscription.
-- **Impact** : Les utilisateurs ne pouvaient pas swiper les films immédiatement après signup.
-- **Résolution** : J'ai désactivé la vérification d'email obligatoire dans les paramètres Supabase (Email Confirmations = OFF). Cela permet aux utilisateurs de se connecter immédiatement après inscription. J'ai ensuite supprimé l'écran verify-email.tsx qui devenait inutile.
+4. **Restauration de progression du swipe**  
+   L'utilisateur revenait au debut apres rechargement.  
+   **Solution**: reconstruction de l'index depuis l'historique persiste et rechargement progressif des pages.
 
-**2. Création de profil et RLS (Row-Level Security)**
-- **Problème** : Après signup, il fallait créer automatiquement un profil utilisateur dans la table profiles. Les policies RLS empêchaient les inserts non autorisés.
-- **Impact** : Certains utilisateurs n'avaient pas de profil, causant des erreurs lors des requêtes aux tables liked_movies et swipe_history.
-- **Résolution** : 
-  - J'ai implémenté une vérification dans authService.createProfile() appelée après signup
-  - Configuration correcte des RLS policies pour autoriser les inserts
-  - Catch des erreurs de duplication avec try/catch
+### Ce que j'aurais fait differemment avec plus de temps
 
-**3. Gestion du débounce de recherche**
-- **Problème** : Sans debounce, chaque caractère tapé déclenchait un appel API à TMDB
-- **Résolution** : Implémentation d'un hook useMovieSearch avec setTimeout, délai 500ms
+- Ajouter des tests automatises (unitaires + parcours E2E).
+- Renforcer la couche de monitoring/observabilite des erreurs runtime.
+- Ajouter des notifications push et du temps reel pour enrichir l'experience.
+- Travailler une phase onboarding plus guidee.
 
-**4. Pagination et restauration de progression**
-- **Problème** : À chaque rechargement, l'utilisateur recommençait au film 1
-- **Résolution** : Calcul du swipeCount depuis swipe_history, chargement des pages jusqu'à targetPage, restauration avec setCurrentIndex
+## Partie B — Mon utilisation de l'IA
 
-**5. TS2345 et erreurs de type TypeScript**
-- **Problème** : Multiples erreurs de type : TS2345, TS2322, TS2769, TS2694
-- **Résolution** : Correction des imports (SharedValue au lieu de Animated.Shared), ajustement des RefObject types, cast when necessary
+### Outils d'IA utilises
 
-### Ce que j'aurais fait différemment avec plus de temps
+- **GitHub Copilot** (principal): generation de boilerplate, suggestions TS/React Native, refactor.
+- **ChatGPT** (ponctuel): comparaison d'approches et reformulation de prompts techniques.
 
-1. **Tests unitaires et E2E** : Jest + Detox pour tester les flux critiques
-2. **State management** : Redux ou Zustand au lieu de Context pour meilleure performance
-3. **Notifications push** : Alerter les utilisateurs des matches
-4. **Real-time** : Supabase Realtime pour collaborative viewing
-5. **Haptic feedback** : Vibrations sur les swipes
-6. **Onboarding** : Tutoriel interactif pour nouveaux utilisateurs
+### Exemples concrets de prompts et resultats
 
----
+**Exemple 1 — Hook de stack de films**
 
-## PARTIE B — MA UTILISATION DE L'IA
-
-### Outils IA utilisés
-
-- **GitHub Copilot** : Autocomplétion, génération de code, refactoring
-- **Processus** : PLAN (avec agent autoskill) → IMPLEMENTATION (avec Copilot) → REVIEW + ADAPT
-
-### Exemples concrets de prompts utilisés
-
-#### **Prompt 1 : Création du hook useMovieStack**
+Prompt utilise:
+```text
+Create a custom React hook to manage a movie stack with:
+- pagination
+- genre filtering
+- restoring current index from swipe history
+Return state + callbacks for loading next pages.
 ```
-"Create a custom React hook called useMovieStack that manages 
-a stack of movies with pagination, filtering by genre, 
-and restoration of user progress on reload. Include refs 
-for movies, currentIndex, and page."
+
+Ce que l'IA a produit: une base de hook exploitable (state, refs, callbacks).  
+Ce que j'ai corrige: la logique de reprise de progression et certains effets/dependances pour eviter les incoherences.
+
+**Exemple 2 — Animation de swipe**
+
+Prompt utilise:
+```text
+Generate Reanimated code for a swipe card:
+- rotate while dragging
+- spring back when below threshold
+- green/red feedback opacity based on direction
 ```
-**Résultat** : Skeleton du hook avec useState/useRef, fonction loadMovies avec filtrage, effects pour pagination
-**Amélioration manuelle** : Ajout boucle de retry si page 1 vide après filtrage, fixage dépendances useCallback
 
-#### **Prompt 2 : Animations Reanimated 3D**
+Ce que l'IA a produit: structure Reanimated correcte (shared values + animated style).  
+Ce que j'ai corrige: reglages des seuils/valeurs et adaptation aux types utilises dans mon ecran.
+
+**Exemple 3 — Debounce recherche**
+
+Prompt utilise:
+```text
+Implement debounced search in React Native with:
+- 500ms delay
+- loading, empty, error states
+- pagination reset when query changes
 ```
-"Generate React Native Reanimated animation code for a card:
-- Rotate X axis from -15° to +15° based on panX value
-- Spring back to center when released (withSpring)
-- Show green overlay on right, red on left with opacity"
-```
-**Résultat** : useSharedValue, useAnimatedStyle, interpolate, spring config
-**Amélioration** : Changé Animated.Shared en SharedValue, ajout Extrapolate.CLAMP, calibrage sensibilité
 
-#### **Prompt 3 : Fix TS2345 type errors**
-```
-"Fix TypeScript errors:
-- TS2345: Argument '(prev) => prev + 1' not assignable to 'number'
-- TS2322: RefObject type mismatch"
-```
-**Résultat** : Changement setPage pattern, ajout | null à types generiques
-**Apprentissage** : Comprendre les types génériques plutôt que les ignorer
+Ce que l'IA a produit: un squelette utile pour la logique de debounce.  
+Ce que j'ai corrige: orchestration des etats UI et reinitialisation propre des resultats/pagination.
 
-#### **Prompt 4 : Pull to refresh pour empty state**
-```
-"Add pull-to-refresh to empty state using RefreshControl inside ScrollView.
-Use isRefreshing state and handleRefresh callback that calls loadMovies(1)"
-```
-**Résultat** : ScrollView avec RefreshControl, useState, callback setup
-**Amélioration** : Message d'aide visible, GenreFilter reste visible
+### Ce que l'IA a bien fait / mal fait
 
-#### **Prompt 5 : MatchMovieCard pour grille**
-```
-"Create MatchMovieCard component for liked movies grid (2 columns).
-Show: poster (75%), title, rating. Similar to MovieCard but optimized."
-```
-**Résultat** : Structure MovieCard adaptée, flex ratios corrects
-**Amélioration** : Font sizes optimisés, séparation de MovieCard pour éviter coupling
+**Bien fait**
+- Acceleration nette sur le boilerplate et la structure initiale.
+- Bonne aide sur les patterns repetitifs (hooks, etats, composants).
+- Gain de temps sur les ajustements TypeScript simples.
 
-### Ce que l'IA a bien fait
+**Moins bien fait**
+- Propositions parfois trop generiques pour la logique metier reelle.
+- Quelques suggestions techniquement valides mais pas adaptees au contexte du projet.
+- Besoin de verification systematique (noms, typage, perf, coherence UX).
 
-1. ✅ **Boilerplate rapide** : Structure complète en secondes
-2. ✅ **Refactoring** : Proposer des noms meilleurs, patterns React
-3. ✅ **Pattern recognition** : Reconnaître les patterns (debounce, animations)
-4. ✅ **TypeScript** : Inférer les types génériques correctement
-5. ✅ **Documentation** : Générer des JSDoc comments utiles
+### Reflexion personnelle
 
-### Ce que l'IA a mal fait
-
-1. ❌ **Logique métier complexe** : Besoin de guidance pour "si page 1 vide alors essayer 2-5"
-2. ❌ **Imports** : Suggestion de Animated.Shared au lieu de SharedValue
-3. ❌ **Nommage** : Génériques (handlePress) au lieu de contextuels
-4. ❌ **Performance** : Oublie useCallback, dépendances douteuses
-5. ❌ **Sécurité** : Ne propose pas SecureStore spontanément
-
-### Ma réflexion personnelle : Comment l'IA a changé ma façon de coder
-
-**1. Planification avant code**
-- Avant : J'allais droit au code, souvent inefficace
-- Après : PLAN → IMPLEMENT → REVIEW avec prompts détaillés
-- Résultat : **Moins de refactoring, code plus prédictible**
-
-**2. Styles modernes et TypeScript**
-- Avant : Peur des types complexes (generics, conditional types)
-- Après : Copilot me montre des patterns TypeScript avancés
-- Résultat : **TypeScript assurée, zéro any inutile**
-
-**3. Documentation technique**
-- Avant : Doc écrite après, vague
-- Après : JSDoc au moment du code via IA
-- Résultat : **PROJECT_CONTEXT.md et HISTORY.md maintenus**
-
-**4. Historisation et traçabilité**
-- Avant : Commits "fix stuff" ou "wip"
-- Après : Copilot m'oblige à penser en "features cohérentes"
-- Résultat : **20+ commits structurés, l'historique raconte la story**
-
-**5. Déboggage plus efficace**
-- Avant : Stack trace → Google → copy/paste aveugle
-- Après : Stack trace → prompt précis à Copilot + compréhension
-- Résultat : **Erreur comprise, pas juste résolue**
-
-**Conclusion** : L'IA n'a pas écrit mon app pour moi. Elle m'a permis de **penser plus clairement, d'écrire plus vite, et de documenter mieux**. Je reste le pilote — l'IA c'est le copilote intelligent qui m'aide à clarifier mes idées avant le code.
-
----
-
-**Document rédigé par** : Alexis Ballenghien  
-**Date** : 5 mai 2026  
-**Projet** : CineMatch — Application de swipe films React Native / Expo  
-**Statut** : Solo, toutes fonctionnalités
-
+L'IA m'a fait passer d'une logique "coder puis corriger" a une logique "specifier, evaluer, adapter".  
+Concretement, j'ecris des prompts plus precis, je garde le controle sur les decisions, et j'utilise l'IA comme accelerateur de production — pas comme remplacement de la conception. Sur ce projet, cela m'a surtout aide a aller plus vite sur les fondations, pour consacrer plus de temps a la qualite fonctionnelle et a la coherence globale de l'app.

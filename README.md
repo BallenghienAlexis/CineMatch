@@ -18,16 +18,11 @@ Une application mobile **React Native / Expo** permettant à des groupes d'amis 
 
 ## 🚀 Démarrage Rapide
 
-### Lien Expo Go permanent pour tester l'app sans installation :
-
-IOS :
-
-![img_3.png](IOS_Expo.png)
+### Lien Expo Go de l'APK de l'application :
 
 Android :
 
-![img_2.png](Android_Expo.png)
-
+https://expo.dev/accounts/alexisballenghien/projects/CineMatch/builds/471731ea-4288-4dc5-830c-d450874e1a60
 
 ### Installation
 
@@ -47,38 +42,6 @@ cp .env.example .env.local
 npm start
 # Puis : i (iOS) ou a (Android) ou w (Web)
 ```
-
-### Configuration requise
-
-#### 1. **Clé API TMDB (The Movie Database)**
-
-1. Aller sur : https://www.themoviedb.org/settings/api
-2. Créer un compte et demander une clé API
-3. Copier la clé dans `.env.local` :
-   ```
-   EXPO_PUBLIC_TMDB_API_KEY=votre_clé_ici
-   ```
-
-#### 2. **Supabase (Base de données + Auth)**
-
-1. Aller sur : https://supabase.com
-2. Créer un nouveau projet
-3. Dans Settings → API, récupérer :
-   - `EXPO_PUBLIC_SUPABASE_URL`
-   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-4. Ajouter dans `.env.local` :
-   ```
-   EXPO_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=votre_clé_anonyme
-   ```
-
-#### 3. **Configuration Supabase**
-
-- Email Confirmations : **OFF** (désactivé pour permettre connexion immédiate)
-- Créer les tables : `profiles`, `liked_movies`, `swipe_history` (scripts inclus)
-- Configurer RLS (Row-Level Security) sur toutes les tables
-
----
 
 ## 📱 Fonctionnalités
 
@@ -366,18 +329,7 @@ Voir `HISTORY.md` pour le changelog complet.
 - **Auteur** : Alexis Ballenghien
 - **Projet** : CineMatch (M1RN - Évaluation)
 - **Date** : Mai 2026
-- **Documentation** : Voir `PROJECT_CONTEXT.md` et `HISTORY.md`
-
----
-
-## 📄 Fichiers Importants
-
-| Fichier | Contenu |
-|---------|---------|
-| `.env.example` | Template variables d'env |
-| `PROJECT_CONTEXT.md` | Architecture + détails techniques |
-| `HISTORY.md` | Changelog par session |
-| `BALLENGHIEN_Alexis_M1RN_DocumentIndividuel.md` | Document individuel |
+- **Documentation** : Voir `HISTORY.md`
 
 ---
 

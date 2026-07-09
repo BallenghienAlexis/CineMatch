@@ -32,28 +32,86 @@ export function AuthProvider(props: any) {
   const segments = useSegments();
 
   React.useEffect(() => {
-    const unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      setIsLoading(false);
+    let isMounted = true;
+    let timeoutId: number;
+
+    const initializeAuth = async () => {
+      try {
+        console.log('[AuthContext] Initializing auth...');
+
+        // Get initial session with timeout
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Auth init timeout')), 5000)
+        );
+
+        const sessionPromise = supabase.auth.getSession();
+        const { data, error: getSessionError } = await Promise.race([
+          sessionPromise,
+          timeoutPromise,
+        ]) as any;
+
+        if (getSessionError) {
+          console.error('[AuthContext] getSession error:', getSessionError);
+        } else {
+          console.log('[AuthContext] Initial session:', data?.session ? 'Found' : 'Not found');
+        }
+
+        if (isMounted) {
+          setSession(data?.session ?? null);
+          setUser(data?.session?.user ?? null);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('[AuthContext] Initialization error:', error);
+        if (isMounted) {
+          console.warn('[AuthContext] Setting loading to false due to error');
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeAuth().then(() => {});
+
+    // Safety timeout: if still loading after 10s, force continue
+    timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[AuthContext] Force stopping loading after timeout');
+        setIsLoading(false);
+      }
+    }, 10000);
+
+    // Subscribe to auth changes
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Auth state changed:', event);
+      if (isMounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
     });
 
     return () => {
-      unsubscribe.data.subscription?.unsubscribe();
+      isMounted = false;
+      clearTimeout(timeoutId);
+      data?.subscription?.unsubscribe();
     };
   }, []);
 
   React.useEffect(() => {
-    if (isLoading) return;
+    if (isLoading) {
+      console.log('[AuthContext] Still loading...');
+      return;
+    }
 
+    console.log('[AuthContext] Auth initialized - session:', session ? 'Active' : 'None', 'segments:', segments);
     const inAuthGroup = segments[0] === 'auth';
 
     if (session && inAuthGroup) {
-      // Si connecté et dans auth, rediriger vers explore
+      console.log('[AuthContext] Redirecting to explore (logged in)');
       router.replace('/(tabs)/explore');
     } else if (!session && !inAuthGroup) {
-      // Si pas connecté et pas dans auth, rediriger vers login
+      console.log('[AuthContext] Redirecting to login (not logged in)');
       router.replace('/auth/login');
     }
   }, [session, isLoading, segments]);
@@ -111,4 +169,3 @@ export function useAuth() {
   }
   return context;
 }
-
